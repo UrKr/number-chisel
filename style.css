@@ -1,0 +1,101 @@
+html, body {
+  background: black;
+  height: 100%;
+  font-family: monospace
+}
+
+body {
+  margin: 0;
+}
+
+#buttons {
+  position: fixed;
+  bottom: 5px;
+  right: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+#buttons > button {
+  height: 40px;
+  width: 58px;
+  border: none;
+  background: black;
+  color: white;
+  outline: none;
+  cursor: pointer;
+}
+
+#nextNumber {
+}
+
+#historyItems {
+  overflow: auto;
+  max-height: 100%;
+}
+
+#historyItems > * {
+   /* white-space: pre; */
+}
+
+#initialNumber {
+  color: #6a6a6a;
+  font-size: 20px;
+  user-select: none;
+}
+
+#history {
+  grid-area: history;
+  color: gray;
+  overflow: auto;
+  max-height: 100%;
+  font-size: 20px;
+  text-align: left;
+  margin-left: 90px;
+}
+
+#numberHolder{
+  grid-area: numberHolder;
+  background: black;
+  margin-top: 129px;
+}
+
+#changeButtons > button {
+  font-size: 25px;
+  background-color: black;
+  color: white;
+  border: 1px solid white;
+  width: 52px;
+  height: 34px;
+}
+
+#changeButtons {
+  height: 150px;
+}
+
+#holder {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto;
+  grid-template: 
+    "history numberHolder"
+    / 40% 60%;
+  /* grid-template-columns: 1fr 2fr;     */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#number {
+  font-size: 100px;
+  color: gray;
+  user-select: none;
+}
+
+.selected { 
+  color: white;
+}

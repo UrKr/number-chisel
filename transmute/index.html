@@ -1,0 +1,1454 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Transmute</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Layout: an alchemist's bench at night. Rivals on top, recipes and the shelf of elements in the middle, your 3 spell cards at the bottom. */
+:root {
+  color-scheme: dark;
+  --bg-1: #2e2356;
+  --bg-2: #1a1334;
+  --bg-3: #0b0818;
+  --shelf-1: #160f2b;
+  --shelf-2: #221840;
+  --ink: #f1ebff;
+  --soft: #b9add6;
+  --brass: #d9a441;
+  --brass-hi: #ffd76a;
+  --brass-deep: #8a6420;
+  --parch: #f6ecd4;
+  --parch-ink: #3a2c18;
+  --glow: #9ff3ff;
+  --danger: #ff7a7a;
+  --c-heat: #e2471d;
+  --c-cool: #2f7fd0;
+  --c-mix: #8452c8;
+  --c-dbl: #1f9a68;
+  --c-blow: #4f7d86;
+  --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body {
+  background-color: var(--bg-3);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='20' cy='30' r='.8' opacity='.5'/%3E%3Ccircle cx='140' cy='18' r='.6' opacity='.4'/%3E%3Ccircle cx='190' cy='120' r='.9' opacity='.35'/%3E%3Ccircle cx='70' cy='160' r='.6' opacity='.45'/%3E%3Ccircle cx='110' cy='90' r='.5' opacity='.3'/%3E%3Ccircle cx='30' cy='200' r='.7' opacity='.35'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse 130% 85% at 50% 40%, var(--bg-1) 0%, var(--bg-2) 55%, var(--bg-3) 100%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font: 700 15px/1.4 var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--glow); outline-offset: 2px; }
+.ico { width: 1em; height: 1em; display: block; flex: none; }
+
+/* Element colours: background top, background bottom, icon */
+.el-F { --e1: #ff8a3d; --e2: #d93d14; --ei: #fff6e0; }
+.el-W { --e1: #5ab2ff; --e2: #1f67c9; --ei: #ffffff; }
+.el-E { --e1: #b08654; --e2: #6a4a26; --ei: #fff1dc; }
+.el-A { --e1: #f2fbff; --e2: #b5dbe7; --ei: #3b6b78; }
+.el-S { --e1: #eef1f6; --e2: #a6b0c0; --ei: #4c5868; }
+.el-I { --e1: #e4fbff; --e2: #86d6ef; --ei: #1d6f8a; }
+.el-L { --e1: #ff6a3d; --e2: #8f1407; --ei: #ffd34d; }
+.el-P { --e1: #82dc72; --e2: #2b8c39; --ei: #f4ffe8; }
+
+.game {
+  height: 100%;
+  min-height: 620px;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 10px 6px;
+  gap: 8px;
+}
+
+/* ---------- Players ---------- */
+.topbar { display: flex; align-items: flex-start; gap: 6px; }
+.players { flex: 1; display: flex; gap: 4px; min-width: 0; }
+.pl { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 66px; }
+.ring {
+  --pct: 0;
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  padding: 4px;
+  background: conic-gradient(var(--c) calc(var(--pct) * 360deg), rgba(255,255,255,.12) 0);
+  transition: transform .25s;
+}
+.ring .sc {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--shelf-1);
+  font: 900 21px/1 var(--font-display);
+  color: var(--c);
+}
+.pl .pn { font-size: 12px; font-weight: 800; color: var(--soft); white-space: nowrap; }
+.pl.active .ring { transform: scale(1.1); box-shadow: 0 0 0 3px var(--c), 0 0 20px var(--c); }
+.pl.active .pn { color: var(--ink); }
+.bubble {
+  position: absolute;
+  top: 74px; left: 50%;
+  transform: translate(-50%, -6px) scale(.8);
+  background: var(--parch);
+  color: var(--parch-ink);
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+  padding: 7px 10px;
+  border-radius: 10px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 15;
+  transition: opacity .2s, transform .2s;
+  box-shadow: 0 6px 16px rgba(0,0,0,.45);
+}
+.bubble::before {
+  content: "";
+  position: absolute;
+  top: -6px; left: 50%;
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-top: 0;
+  border-bottom-color: var(--parch);
+}
+.bubble.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.goal-note { font-size: 11px; color: var(--soft); text-align: right; line-height: 1.2; padding-top: 6px; white-space: nowrap; }
+.goal-note b { display: block; font: 900 15px/1.15 var(--font-display); color: var(--brass-hi); }
+.menu-btn {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.14);
+  flex: none;
+}
+
+/* ---------- Recipes ---------- */
+.table { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: 0; }
+.targets-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.targets-label { font: 900 12px/1 var(--font-display); letter-spacing: .14em; color: var(--brass-hi); }
+.targets-sub { font-size: 11px; color: var(--soft); margin-top: -2px; }
+.targets { display: flex; gap: 8px; justify-content: center; }
+.tgt {
+  width: 98px;
+  padding: 7px 4px 6px;
+  background: linear-gradient(180deg, #fff7e3, var(--parch));
+  color: var(--parch-ink);
+  border: 2px solid var(--brass);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 4px 0 var(--brass-deep), 0 10px 18px rgba(0,0,0,.4);
+}
+.tgt .pair { display: flex; align-items: center; gap: 4px; font: 900 16px/1 var(--font-display); color: var(--brass-deep); }
+.tgt .chip { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(180deg, var(--e1), var(--e2)); color: var(--ei); font-size: 22px; box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 rgba(0,0,0,.25); }
+.tgt .tn { font-size: 10px; font-weight: 900; color: #7a6440; white-space: nowrap; }
+.tgt.hit { animation: hit .5s ease; }
+.tgt.new { animation: flipin .5s cubic-bezier(.3,1.5,.6,1); }
+@keyframes hit { 0% { transform: none; } 40% { transform: scale(1.15); box-shadow: 0 4px 0 var(--brass-deep), 0 0 34px var(--brass-hi); } 100% { transform: none; } }
+@keyframes flipin { from { transform: rotateX(90deg); } to { transform: none; } }
+
+/* ---------- The shelf ---------- */
+.zone {
+  position: relative;
+  background: linear-gradient(180deg, var(--shelf-1), var(--shelf-2));
+  border-radius: 20px;
+  border: 1px solid rgba(217,164,65,.35);
+  padding: 46px 10px 30px;
+  box-shadow: inset 0 5px 16px rgba(0,0,0,.6), 0 0 0 4px rgba(217,164,65,.08);
+}
+.stone {
+  container-type: inline-size;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  min-height: 56px;
+  align-items: flex-end;
+}
+.tile {
+  --w: min(50px, (100cqi - (var(--n) - 1) * 5px) / var(--n));
+  flex: 0 0 var(--w);
+  width: var(--w);
+  height: var(--w);
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--w) * .62);
+  color: var(--ei);
+  background: linear-gradient(180deg, var(--e1), var(--e2));
+  border-radius: 30%;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.45),
+    inset 0 -3px 0 rgba(0,0,0,.2),
+    0 4px 0 rgba(0,0,0,.35),
+    0 8px 12px rgba(0,0,0,.45);
+  position: relative;
+  transition: transform .12s, filter .15s;
+}
+.tile .cap {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--soft);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.tile.dim { filter: brightness(.45) saturate(.5); }
+.tile.canplay:active { transform: translateY(2px); }
+.tile .pv {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px;
+  border-radius: 9px;
+  background: var(--parch);
+  display: flex;
+  gap: 2px;
+  font-size: 18px;
+  box-shadow: 0 3px 8px rgba(0,0,0,.45);
+  pointer-events: none;
+  z-index: 2;
+}
+.tile .pv.mixpv { left: calc(100% + 2.5px); }
+.tile .pv::after {
+  content: "";
+  position: absolute;
+  top: 100%; left: 50%;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-bottom: 0;
+  border-top-color: var(--parch);
+}
+.tile .pv .chip { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font-size: 15px; background: linear-gradient(180deg, var(--e1), var(--e2)); color: var(--ei); }
+.tile .pv .gone { width: 20px; height: 20px; display: grid; place-items: center; color: var(--parch-ink); font: 900 14px/1 var(--font-body); }
+.tile.gold { animation: goldtile 1s ease-in-out infinite alternate; }
+.tile.gold .pv { background: var(--brass-hi); }
+.tile.gold .pv::after { border-top-color: var(--brass-hi); }
+@keyframes goldtile {
+  from { box-shadow: inset 0 2px 0 rgba(255,255,255,.45), 0 4px 0 rgba(0,0,0,.35), 0 0 0 2px var(--brass-hi), 0 0 4px var(--brass-hi); }
+  to { box-shadow: inset 0 2px 0 rgba(255,255,255,.45), 0 4px 0 rgba(0,0,0,.35), 0 0 0 3px var(--brass-hi), 0 0 22px var(--brass-hi); }
+}
+.tile.partner { box-shadow: inset 0 2px 0 rgba(255,255,255,.45), 0 4px 0 rgba(0,0,0,.35), 0 0 0 2px rgba(255,255,255,.6); }
+.tile.botsel { transform: translateY(-8px); box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 0 3px var(--bc), 0 0 22px var(--bc); }
+.tile.crack { animation: crack .34s ease-in forwards; }
+@keyframes crack {
+  0% { transform: none; }
+  35% { transform: translateY(-5px) rotate(-8deg) scale(1.05); filter: brightness(1.5); }
+  65% { transform: translateY(-3px) rotate(8deg); filter: brightness(2); }
+  100% { transform: translateY(-14px) scale(.2) rotate(30deg); opacity: 0; filter: brightness(3); }
+}
+.tile.fresh { animation: appear .55s cubic-bezier(.3,1.6,.6,1) both; }
+@keyframes appear { 0% { transform: scale(0) rotate(-90deg); opacity: 0; filter: brightness(2.5); } 100% { transform: none; opacity: 1; filter: none; } }
+.tile.carve { animation: brew .4s ease-out forwards; box-shadow: 0 0 0 3px var(--brass-hi), 0 0 30px var(--brass-hi); }
+@keyframes brew { 0% { transform: scale(1); } 50% { transform: scale(1.2) translateY(-6px); filter: brightness(1.6); } 100% { transform: translateY(-4px); filter: brightness(1.3); } }
+
+/* ---------- Coach ---------- */
+.coach { min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+.msg { margin: 0; font-size: 16px; max-width: 30ch; text-wrap: balance; }
+.msg .gold { color: var(--brass-hi); }
+.msg .warn { color: var(--danger); }
+.msg b.el { color: var(--glow); }
+.again {
+  font: 900 17px/1 var(--font-display);
+  letter-spacing: .06em;
+  color: #3a2400;
+  background: linear-gradient(180deg, var(--brass-hi), var(--brass));
+  padding: 13px 28px;
+  border-radius: 999px;
+  box-shadow: 0 5px 0 var(--brass-deep);
+}
+
+/* ---------- Hand ---------- */
+.me { display: flex; align-items: flex-end; gap: 8px; }
+.hand { flex: 1; display: flex; justify-content: center; align-items: flex-end; gap: 6px; padding-top: 26px; min-height: 166px; min-width: 0; }
+.card {
+  --tc: var(--c-heat);
+  --dy: 0px;
+  flex: 0 1 100px;
+  min-width: 0;
+  aspect-ratio: 5 / 7;
+  border-radius: 12px;
+  background: var(--parch);
+  color: var(--parch-ink);
+  border: 3px solid var(--tc);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(var(--dy));
+  transition: transform .22s cubic-bezier(.3,1.4,.6,1), filter .2s, box-shadow .2s;
+  box-shadow: 0 8px 16px rgba(0,0,0,.5);
+  position: relative;
+}
+.card .band {
+  width: 100%;
+  height: 38%;
+  flex: none;
+  background: var(--tc);
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 26px;
+  background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,.3), transparent 60%);
+}
+.card .cname { font: 900 11px/1 var(--font-display); letter-spacing: .04em; color: #fff; }
+.card .band .bico { font-size: 21px; }
+.card .band { flex-direction: column; gap: 3px; }
+.card .rules { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 4px 3px; }
+.card .rrow { display: flex; align-items: center; justify-content: center; gap: 1px; font-size: 13px; }
+.card .rrow .chip { width: 15px; height: 15px; border-radius: 4px; display: grid; place-items: center; font-size: 11px; background: linear-gradient(180deg, var(--e1), var(--e2)); color: var(--ei); }
+.card .rrow .op { font-size: 9px; font-weight: 900; color: #8a7656; width: 8px; text-align: center; }
+.card .rtext { font-size: 10.5px; font-weight: 800; color: #6d5a3c; text-align: center; line-height: 1.2; }
+.card.t-heat { --tc: var(--c-heat); } .card.t-cool { --tc: var(--c-cool); } .card.t-mix { --tc: var(--c-mix); }
+.card.t-dbl { --tc: var(--c-dbl); } .card.t-blow { --tc: var(--c-blow); }
+.card .star {
+  position: absolute;
+  top: -12px; right: -10px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--brass-hi);
+  color: #5a3d00;
+  display: grid; place-items: center;
+  font-size: 17px;
+  box-shadow: 0 3px 0 var(--brass-deep), 0 0 14px rgba(255,215,106,.8);
+  animation: star 1.2s ease-in-out infinite alternate;
+  z-index: 2;
+}
+@keyframes star { from { transform: scale(1) rotate(-8deg); } to { transform: scale(1.12) rotate(8deg); } }
+.card.lift { --dy: -24px; z-index: 3; box-shadow: 0 0 0 3px #fff, 0 0 30px var(--tc), 0 16px 24px rgba(0,0,0,.5); }
+.card.other { filter: brightness(.65); }
+.card.idle { filter: brightness(.7); }
+.card.wiggle { animation: wiggle .4s ease; }
+@keyframes wiggle { 0%, 100% { transform: translateY(var(--dy)); } 25% { transform: translateY(var(--dy)) rotate(-6deg); } 75% { transform: translateY(var(--dy)) rotate(6deg); } }
+
+.side { display: flex; flex-direction: column; gap: 8px; padding-bottom: 4px; flex: none; }
+.rbtn {
+  width: 58px;
+  min-height: 58px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.15);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--soft);
+  line-height: 1.1;
+  text-align: center;
+}
+.rbtn svg { width: 22px; height: 22px; }
+.rbtn:disabled { opacity: .35; cursor: default; }
+.rbtn.armed { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+/* ---------- FX ---------- */
+.fx { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
+.fx > * { position: fixed; }
+.fx .card { transform: none; }
+.float {
+  font: 900 26px/1 var(--font-display);
+  color: var(--brass-hi);
+  text-shadow: 0 3px 0 #5a3d00, 0 0 18px rgba(255,215,106,.8);
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+.spark { width: 8px; height: 8px; border-radius: 50%; background: var(--brass-hi); box-shadow: 0 0 10px var(--brass-hi); }
+.finger {
+  position: fixed;
+  width: 30px; height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.55);
+  pointer-events: none;
+  z-index: 28;
+  animation: tap 1.2s ease-out infinite;
+}
+@keyframes tap {
+  0% { transform: scale(.7); box-shadow: 0 0 0 0 rgba(255,255,255,.6); }
+  60% { transform: scale(1); box-shadow: 0 0 0 18px rgba(255,255,255,0); }
+  100% { transform: scale(.7); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+.banner {
+  position: fixed;
+  left: 0; right: 0;
+  top: 42%;
+  z-index: 25;
+  pointer-events: none;
+  text-align: center;
+  font: 900 32px/1 var(--font-display);
+  letter-spacing: .08em;
+  color: var(--brass-hi);
+  text-shadow: 0 3px 0 #5a3d00;
+  padding: 16px 0;
+  background: linear-gradient(90deg, transparent, rgba(11,8,24,.9) 20%, rgba(11,8,24,.9) 80%, transparent);
+  opacity: 0;
+}
+.banner.go { animation: banner 1.1s ease both; }
+@keyframes banner {
+  0% { opacity: 0; transform: translateX(-30%); }
+  20% { opacity: 1; transform: none; }
+  75% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateX(30%); }
+}
+
+/* ---------- Sheets ---------- */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(8,5,18,.75);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sheet-card {
+  width: 100%;
+  max-width: 520px;
+  max-height: 92%;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #2a1f4d, #17112e);
+  border-radius: 22px 22px 0 0;
+  border-top: 1px solid rgba(217,164,65,.4);
+  padding: 22px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sheet-card h2 { margin: 0; font: 900 26px/1.1 var(--font-display); color: var(--brass-hi); letter-spacing: .04em; }
+.sheet-card h3 { margin: 4px 0 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); }
+.big-btn {
+  min-height: 52px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.15);
+  font-size: 16px;
+  font-weight: 900;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.big-btn.primary { background: linear-gradient(180deg, var(--brass-hi), var(--brass)); color: #3a2400; border: 0; box-shadow: 0 4px 0 var(--brass-deep); }
+.opp-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.opp-row .big-btn { flex-direction: column; gap: 0; min-height: 64px; }
+.opp-row .big-btn b { font: 900 24px/1 var(--font-display); color: var(--brass-hi); }
+.opp-row .big-btn span { font-size: 11px; color: var(--soft); }
+.step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+.step .n {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--brass); color: #3a2400;
+  display: grid; place-items: center;
+  font: 900 18px/1 var(--font-display);
+}
+.step .body { display: flex; flex-direction: column; gap: 8px; }
+.step .body p { margin: 0; font-size: 16px; }
+.demo { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.demo .arrow { color: var(--soft); font-weight: 900; }
+.mini { width: 28px; height: 28px; border-radius: 30%; display: inline-grid; place-items: center; font-size: 18px; background: linear-gradient(180deg, var(--e1), var(--e2)); color: var(--ei); box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+.mini.hl { box-shadow: 0 0 0 2px var(--brass-hi), 0 0 10px var(--brass-hi); }
+.mini-card { display: inline-grid; place-items: center; width: 32px; height: 42px; border-radius: 6px; color: #fff; font-size: 20px; background: var(--tc); border: 2px solid var(--parch); flex: none; }
+.legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.legend div { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; }
+.ref { display: flex; flex-direction: column; gap: 10px; }
+.ref > div { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.ref .seq { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.ref .seq .mini { width: 22px; height: 22px; font-size: 14px; }
+.tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
+
+.win {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(8,5,18,.82);
+  display: grid;
+  place-items: center;
+  padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));
+}
+.win canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.win-card {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  background: linear-gradient(180deg, #33275e, #17112e);
+  border: 1px solid rgba(217,164,65,.45);
+  border-radius: 22px;
+  padding: 26px 20px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.55);
+  animation: popin .45s cubic-bezier(.3,1.5,.6,1) both;
+}
+@keyframes popin { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+.win-card h2 { margin: 0; font: 900 34px/1.05 var(--font-display); color: var(--brass-hi); text-shadow: 0 3px 0 #5a3d00; }
+.final { display: flex; flex-direction: column; gap: 6px; }
+.final div { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,.06); }
+.final b { font: 900 18px/1 var(--font-display); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tile, .card, .ring { transition: none; }
+  .tile.gold, .card .star, .finger { animation: none; }
+  .tile.crack, .tile.fresh, .tile.carve, .banner.go, .win-card, .tgt.hit, .tgt.new { animation-duration: .01s; }
+}
+@media (max-height: 680px) {
+  .hand { min-height: 146px; padding-top: 20px; }
+  .card { flex-basis: 88px; }
+  .table { gap: 8px; }
+  .zone { padding-top: 42px; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="el-F" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1.8c.9 3.6 5.6 6.2 5.6 11.6a5.6 5.6 0 0 1-11.2 0c0-2.4 1.1-4 2.3-5 .1 2.2 1 3.5 2.3 3.7-1-3.3-.1-7 1-10.3z"/></symbol>
+    <symbol id="el-W" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.2C9 6.8 5.8 10.3 5.8 14.2a6.2 6.2 0 0 0 12.4 0c0-3.9-3.2-7.4-6.2-12z"/><path fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-linecap="round" d="M9.2 14.5a2.9 2.9 0 0 0 2.4 3"/></symbol>
+    <symbol id="el-E" viewBox="0 0 24 24"><path fill="currentColor" d="M1.5 20 9 7.5l4.2 6.6 2.3-3.4L22.5 20z"/><path fill="rgba(0,0,0,.18)" d="M9 7.5 6.8 11.2l2.2-.9 1.8 1.3z"/></symbol>
+    <symbol id="el-A" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M3 8.5h11.5a3 3 0 1 0-3-3M3 12.5h16a3 3 0 1 1-3 3M3 16.5h7.5"/></symbol>
+    <symbol id="el-S" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M7 21c-2-2.7 2-4.7 0-7.5S9 9 7 6M12 19c-2-2.7 2-4.7 0-7.5s2-4.5 0-7.5M17 21c-2-2.7 2-4.7 0-7.5S19 9 17 6"/></symbol>
+    <symbol id="el-I" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6"/><path d="M9.5 3.8 12 6l2.5-2.2M9.5 20.2 12 18l2.5 2.2M3.4 10.6l3.2-.6-1-3M20.6 13.4l-3.2.6 1 3M5.6 17l1-3-3.2-.6M18.4 7l-1 3 3.2.6"/></g></symbol>
+    <symbol id="el-L" viewBox="0 0 24 24"><path fill="currentColor" d="M2 21 7.6 11h8.8L22 21z"/><path fill="currentColor" d="M12 2.5c1.1 2 2.4 3.3 2.4 5a2.4 2.4 0 0 1-4.8 0c0-1.7 1.3-3 2.4-5z"/><path fill="rgba(0,0,0,.25)" d="M7.6 11h8.8l-1.5 2.7-1.6-1.3-1.5 2-1.7-1.6-1.4 1.4z"/></symbol>
+    <symbol id="el-P" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M12 21.5V11"/><path fill="currentColor" d="M12 13.5c-5.2 0-7.6-3-7.6-7.6 5.2 0 7.6 3 7.6 7.6zM12 11.3c0-4.6 2.4-7.6 7.6-7.6 0 4.6-2.4 7.6-7.6 7.6z"/></symbol>
+    <symbol id="c-mix" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a6 6 0 0 0 12 0V3"/><path d="M4 21h16M12 15v6"/></g></symbol>
+    <symbol id="c-dbl" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="7" width="11" height="11" rx="3"/><rect x="10" y="3" width="11" height="11" rx="3" fill="rgba(255,255,255,.25)"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="game" id="game">
+  <header class="topbar">
+    <div class="players" id="players"></div>
+    <div class="goal-note">first to<b>5 brews</b></div>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </header>
+
+  <main class="table">
+    <div class="targets-wrap">
+      <div class="targets-label">BREW ONE OF THESE</div>
+      <div class="targets-sub">Put the two elements side by side, either order</div>
+      <div class="targets" id="targets"></div>
+    </div>
+    <div class="zone" id="zone">
+      <div class="stone" id="stone" role="group" aria-label="Row of elements"></div>
+    </div>
+    <div class="coach" id="coach" aria-live="polite"></div>
+  </main>
+
+  <section class="me">
+    <div class="hand" id="hand"></div>
+    <div class="side">
+      <button class="rbtn" id="hintBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>
+        Hint
+      </button>
+      <button class="rbtn" id="swapBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>
+        <span id="swapLabel">New cards</span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<div class="fx" id="fx"></div>
+<div class="finger" id="finger" hidden></div>
+<div class="banner" id="banner"></div>
+
+<div class="sheet" id="menu" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <h2 id="menuTitle">Transmute</h2>
+    <h3>New game</h3>
+    <div class="opp-row">
+      <button class="big-btn" type="button" id="opp1"><b>1</b><span>rival</span></button>
+      <button class="big-btn" type="button" id="opp2"><b>2</b><span>rivals</span></button>
+      <button class="big-btn" type="button" id="opp3"><b>3</b><span>rivals</span></button>
+    </div>
+    <button class="big-btn" type="button" id="howBtn">How to play</button>
+    <button class="big-btn" type="button" id="soundBtn">Sound: on</button>
+    <button class="big-btn primary" type="button" id="menuClose">Back to the game</button>
+  </div>
+</div>
+
+<div class="sheet" id="howto" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+    <h2 id="howTitle">How to play</h2>
+    <div class="step">
+      <span class="n">1</span>
+      <div class="body">
+        <p>Brew a recipe by getting its two elements side by side on the shelf.</p>
+        <div class="demo" id="demo1"></div>
+      </div>
+    </div>
+    <div class="step">
+      <span class="n">2</span>
+      <div class="body">
+        <p>Tap one of your spell cards, then tap an element. The spell changes it.</p>
+        <div class="demo" id="demo2"></div>
+      </div>
+    </div>
+    <div class="step">
+      <span class="n">3</span>
+      <div class="body">
+        <p>Fire is now next to Water, so the pair is brewed and you score. First to 5 brews wins.</p>
+      </div>
+    </div>
+    <h3>Helpers</h3>
+    <ul class="tips">
+      <li>A ★ on a card means it can brew a recipe right now.</li>
+      <li>After you tap a card, bubbles show what each element would become. Gold bubbles brew.</li>
+      <li>Hint picks a move for you.</li>
+    </ul>
+    <h3>The spells</h3>
+    <div class="ref" id="ref"></div>
+    <h3>The elements</h3>
+    <div class="legend" id="legend"></div>
+    <button class="big-btn primary" type="button" id="howClose">Got it</button>
+  </div>
+</div>
+
+<div class="win" id="win" hidden>
+  <canvas id="confetti"></canvas>
+  <div class="win-card">
+    <h2 id="winTitle">You win!</h2>
+    <div class="final" id="final"></div>
+    <button class="big-btn primary" type="button" id="againBtn">Play again</button>
+    <button class="big-btn" type="button" id="winMenuBtn">Change rivals</button>
+  </div>
+</div>
+
+<script>
+// ===== LOGIC START =====
+const MAX_LEN = 9, MIN_LEN = 3, HAND = 3, WIN = 5;
+const NAMES = ['You', 'Morgana', 'Paracel', 'Hermes'];
+const EL_NAME = { F: 'Fire', W: 'Water', E: 'Earth', A: 'Air', S: 'Steam', I: 'Ice', L: 'Lava', P: 'Plant' };
+// Two ladders, cold to hot. Heat moves one step up, Cool one step down.
+const LADDERS = ['IWSA', 'ELF'];
+const HEAT = {}, COOL = {};
+for (const l of LADDERS) for (let i = 0; i + 1 < l.length; i++) { HEAT[l[i]] = l[i + 1]; COOL[l[i + 1]] = l[i]; }
+const MIXES = [['F', 'W', 'S'], ['F', 'E', 'L'], ['W', 'E', 'P'], ['W', 'A', 'I'], ['P', 'F', 'F']];
+const MIX = {};
+for (const [a, b, c] of MIXES) { MIX[a + b] = c; MIX[b + a] = c; }
+const CARD_INFO = {
+  heat: { name: 'Heat' },
+  cool: { name: 'Cool' },
+  mix: { name: 'Mix' },
+  dbl: { name: 'Double' },
+  blow: { name: 'Blow away' },
+};
+const CARD_MIX = { heat: 6, cool: 6, mix: 5, dbl: 5, blow: 6 };
+const N_TARGETS = 3;
+
+const rnd = n => Math.floor(Math.random() * n);
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const POOL = 'FFFWWWEEEAAASILP';
+function randPieces(n) { let s = ''; for (let i = 0; i < n; i++) s += POOL[rnd(POOL.length)]; return s; }
+
+// What a card does to the piece at i. Mix also uses the piece to its right.
+function tryPlay(stone, card, i) {
+  const c = stone[i];
+  let res, span = 1;
+  switch (card) {
+    case 'heat': if (!HEAT[c]) return { ok: false, why: `${EL_NAME[c]} is as hot as it gets` }; res = HEAT[c]; break;
+    case 'cool': if (!COOL[c]) return { ok: false, why: `${EL_NAME[c]} is as cold as it gets` }; res = COOL[c]; break;
+    case 'dbl': res = c + c; break;
+    case 'blow': if (stone.length <= 2) return { ok: false, why: 'Too few left' }; res = ''; break;
+    case 'mix': {
+      const d = stone[i + 1];
+      if (!d) return { ok: false, why: 'Nothing to its right' };
+      if (!MIX[c + d]) return { ok: false, why: `${EL_NAME[c]} and ${EL_NAME[d]} don't mix` };
+      res = MIX[c + d]; span = 2; break;
+    }
+    default: return { ok: false, why: '?' };
+  }
+  const ns = stone.slice(0, i) + res + stone.slice(i + span);
+  if (ns.length > MAX_LEN) return { ok: false, why: 'The row is full' };
+  return { ok: true, res, span, ns };
+}
+
+const rev = t => t[1] + t[0];
+function findTarget(stone, t) {
+  const a = stone.indexOf(t);
+  const b = stone.indexOf(rev(t));
+  if (a < 0) return b;
+  if (b < 0) return a;
+  return Math.min(a, b);
+}
+const sameTarget = (a, b) => a === b || a === rev(b);
+
+// New recipes are pairs one card away from the current row, so there is always something to aim at.
+function newTarget(S) {
+  const ok = t => t[0] !== t[1] && findTarget(S.stone, t) < 0 && !S.targets.some(x => x && sameTarget(x, t));
+  const near = new Set();
+  for (const c of Object.keys(CARD_INFO)) {
+    for (let i = 0; i < S.stone.length; i++) {
+      const r = tryPlay(S.stone, c, i);
+      if (!r.ok) continue;
+      const lo = Math.max(0, i - 1), hi = Math.min(r.ns.length, i + r.res.length + 1);
+      for (let j = lo; j + 2 <= hi; j++) { const t = r.ns.slice(j, j + 2); if (ok(t)) near.add(t); }
+    }
+  }
+  const list = [...near];
+  if (list.length) return list[rnd(list.length)];
+  for (;;) { const t = randPieces(2); if (ok(t)) return t; }
+}
+
+function resolve(S, mover) {
+  const events = [];
+  for (let guard = 0; guard < 50; guard++) {
+    let hit = false;
+    for (let k = 0; k < S.targets.length; k++) {
+      const t = S.targets[k];
+      const idx = findTarget(S.stone, t);
+      if (idx >= 0) {
+        events.push({ type: 'carve', pi: mover, idx, num: t, slot: k, before: S.stone });
+        S.stone = S.stone.slice(0, idx) + S.stone.slice(idx + 2);
+        S.players[mover].score++;
+        S.targets[k] = '';
+        S.targets[k] = newTarget(S);
+        events[events.length - 1].next = S.targets[k];
+        hit = true;
+        break;
+      }
+    }
+    if (hit) continue;
+    if (S.stone.length < MIN_LEN) {
+      const from = S.stone.length;
+      S.stone += randPieces(MIN_LEN - from);
+      events.push({ type: 'refill', from, after: S.stone });
+      continue;
+    }
+    break;
+  }
+  return events;
+}
+
+function buildDeck() {
+  const d = [];
+  for (const [t, k] of Object.entries(CARD_MIX)) for (let i = 0; i < k; i++) d.push(t);
+  return shuffle(d);
+}
+function drawCards(S, p) {
+  while (p.hand.length < HAND) {
+    if (!S.deck.length) { S.deck = shuffle(S.discard); S.discard = []; }
+    if (!S.deck.length) S.deck = buildDeck();
+    p.hand.push(S.deck.pop());
+  }
+}
+
+function newGame(nBots, tutorial) {
+  const S = { v: 3, players: [], stone: randPieces(6), targets: [], turn: 0, round: 1, dry: 0, slot: 0, deck: buildDeck(), discard: [], winner: null };
+  for (let i = 0; i <= nBots; i++) S.players.push({ name: NAMES[i], human: i === 0, score: 0, hand: [] });
+  for (let k = 0; k < N_TARGETS; k++) S.targets.push(newTarget(S));
+  for (const p of S.players) drawCards(S, p);
+  if (tutorial) {
+    // An obvious first brew: heat the Ice into Water, right next to the Fire.
+    S.stone = 'EIFAW';
+    S.targets = ['FW', 'PE', 'AL'];
+    S.players[0].hand = ['heat', 'dbl', 'blow'];
+  }
+  return S;
+}
+
+function legalMoves(S, pi) {
+  const p = S.players[pi], out = [];
+  const seen = new Set();
+  p.hand.forEach((c, h) => {
+    if (seen.has(c)) return;
+    seen.add(c);
+    for (let i = 0; i < S.stone.length; i++) { const r = tryPlay(S.stone, c, i); if (r.ok) out.push({ h, i, ns: r.ns }); }
+  });
+  return out;
+}
+
+function carvesOn(S, ns) {
+  let stone = ns, n = 0;
+  const left = S.targets.slice();
+  for (let guard = 0; guard < 6; guard++) {
+    const k = left.findIndex(t => findTarget(stone, t) >= 0);
+    if (k < 0) break;
+    const idx = findTarget(stone, left[k]);
+    stone = stone.slice(0, idx) + stone.slice(idx + 2);
+    left.splice(k, 1);
+    n++;
+  }
+  return n;
+}
+
+function evalMove(S, pi, ns, noise) {
+  let sc = carvesOn(S, ns) * 10;
+  // Don't leave both halves of a recipe lying around for the next player.
+  for (const t of S.targets) if (ns.includes(t[0]) && ns.includes(t[1])) sc -= .8;
+  if (ns.length >= MAX_LEN - 1) sc -= .5;
+  return sc + Math.random() * noise;
+}
+
+function chooseMove(S, pi, noise = 1) {
+  let best = null, bestSc = -Infinity;
+  for (const m of legalMoves(S, pi)) {
+    const sc = evalMove(S, pi, m.ns, noise);
+    if (sc > bestSc) { bestSc = sc; best = m; }
+  }
+  return best;
+}
+
+function applyTurn(S, pi, mv) {
+  const p = S.players[pi];
+  const info = { pi, before: S.stone, mv };
+  if (mv) {
+    const card = p.hand[mv.h];
+    const r = tryPlay(S.stone, card, mv.i);
+    if (!r.ok) throw new Error('Illegal move');
+    info.card = card; info.res = r.res; info.span = r.span; info.piece = S.stone[mv.i]; info.mid = r.ns;
+    p.hand.splice(mv.h, 1);
+    S.discard.push(card);
+    S.stone = r.ns;
+  } else {
+    S.discard.push(...p.hand);
+    p.hand = [];
+  }
+  info.events = resolve(S, pi);
+  if (info.events.some(e => e.type === 'carve')) S.dry = 0;
+  else if (++S.dry >= S.players.length) {
+    S.dry = 0;
+    const k = S.slot % S.targets.length;
+    S.slot++;
+    const old = S.targets[k];
+    S.targets[k] = '';
+    S.targets[k] = newTarget(S);
+    info.refresh = { slot: k, old, next: S.targets[k] };
+  }
+  info.after = S.stone;
+  drawCards(S, p);
+  const top = Math.max(...S.players.map(x => x.score));
+  if (top >= WIN) {
+    const n = S.players.length;
+    for (let k = 0; k < n; k++) { const q = (pi + k) % n; if (S.players[q].score === top) { S.winner = q; break; } }
+  } else {
+    S.turn = (pi + 1) % S.players.length;
+    if (S.turn === 0) S.round++;
+  }
+  return info;
+}
+// ===== LOGIC END =====
+
+const $ = id => document.getElementById(id);
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms, 250) : ms));
+const STORE_KEY = 'transmute-game-v1';
+const COLORS = ['#ffd76a', '#8fd0ff', '#ff8fb0', '#c3a8ff'];
+
+/* ---------- Pictures ---------- */
+const ico = (id, cls = '') => `<svg class="ico ${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+const chip = (e, cls = 'chip') => `<span class="${cls} el-${e}">${ico('el-' + e)}</span>`;
+const pairName = t => `${EL_NAME[t[0]]} + ${EL_NAME[t[1]]}`;
+const CARD_ICON = { heat: ico('el-F', 'bico'), cool: ico('el-I', 'bico'), mix: ico('c-mix', 'bico'), dbl: ico('c-dbl', 'bico'), blow: ico('el-A', 'bico') };
+const ladderRow = (l, dir) => {
+  const seq = dir > 0 ? [...l] : [...l].reverse();
+  return `<div class="rrow">${seq.map(e => chip(e)).join('<span class="op">›</span>')}</div>`;
+};
+function cardRules(c) {
+  switch (c) {
+    case 'heat': return LADDERS.map(l => ladderRow(l, 1)).join('');
+    case 'cool': return LADDERS.map(l => ladderRow(l, -1)).join('');
+    case 'mix': return MIXES.slice(0, 4).map(([a, b, r]) => `<div class="rrow">${chip(a)}<span class="op">+</span>${chip(b)}<span class="op">=</span>${chip(r)}</div>`).join('') +
+      `<div class="rtext" style="font-size:9px">+ more · with the one on its right</div>`;
+    case 'dbl': return `<div class="rtext">Makes a copy next to it</div><div class="rrow">${chip('W')}<span class="op">›</span>${chip('W')}${chip('W')}</div>`;
+    case 'blow': return `<div class="rtext">Blows one element off the shelf</div>`;
+  }
+  return '';
+}
+const CARD_HELP = {
+  heat: 'Heat moves an element up its ladder',
+  cool: 'Cool moves an element down its ladder',
+  mix: 'Mix joins an element with the one on its right',
+  dbl: 'Double copies an element',
+  blow: 'Blow away removes an element',
+};
+
+let S = null;
+let lifted = null;
+let busy = false, animWho = -1, epoch = 0;
+let shownScores = null, shownTargets = null;
+let coachBusy = '', hintMsg = '', hintTile = -1;
+let swapArmed = false, swapTimer = null;
+let muted = false, tutDone = false;
+
+const pref = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+muted = pref('transmute-muted') === '1';
+tutDone = pref('transmute-tut') === '1';
+
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    const s = raw && JSON.parse(raw);
+    return s && s.v === 3 && Array.isArray(s.players) && Array.isArray(s.targets) ? s : null;
+  } catch (e) { return null; }
+}
+
+/* ---------- Sound ---------- */
+let actx = null;
+function ac() {
+  if (muted) return null;
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  } catch (e) { return null; }
+}
+function tone(f, dur, type = 'triangle', vol = .1, when = 0, slide) {
+  const a = ac(); if (!a) return;
+  const t = a.currentTime + when;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t); o.stop(t + dur + .02);
+}
+function noise(dur, vol, freq) {
+  const a = ac(); if (!a) return;
+  const n = Math.floor(a.sampleRate * dur);
+  const buf = a.createBuffer(1, n, a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+  const s = a.createBufferSource(); s.buffer = buf;
+  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq;
+  const g = a.createGain(); g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(a.destination);
+  s.start();
+}
+const sfx = {
+  lift: () => tone(520, .1, 'sine', .07, 0, 880),
+  bad: () => tone(190, .14, 'square', .03, 0, 120),
+  zap: () => { noise(.25, .35, 1600); tone(900, .25, 'sine', .07, 0, 300); },
+  pop: () => tone(260, .12, 'sine', .08, 0, 620),
+  brew: k => [659, 880, 1047, 1319].forEach((f, i) => tone(f * (1 + k * .1), .25, 'sine', .06, i * .06)),
+  swap: () => { tone(420, .08, 'triangle', .05, 0, 820); tone(820, .08, 'triangle', .05, .09, 420); },
+  turn: () => tone(660, .14, 'sine', .05, 0, 990),
+  win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .32, 'triangle', .09, i * .11)),
+  lose: () => [392, 330, 262].forEach((f, i) => tone(f, .34, 'triangle', .07, i * .16)),
+};
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+/* ---------- Helpers ---------- */
+const humanTurn = () => S.winner == null && S.players[S.turn].human && !busy;
+const inRange = (r, i) => r && i >= r[0] && i <= r[1];
+const me = () => S.players[0];
+const cardScores = c => { for (let i = 0; i < S.stone.length; i++) { const r = tryPlay(S.stone, c, i); if (r.ok && carvesOn(S, r.ns) > 0) return true; } return false; };
+const anyMove = () => me().hand.some(c => { for (let i = 0; i < S.stone.length; i++) if (tryPlay(S.stone, c, i).ok) return true; return false; });
+
+/* ---------- Rendering ---------- */
+function renderPlayers() {
+  const el = $('players');
+  el.innerHTML = '';
+  S.players.forEach((p, i) => {
+    const score = shownScores ? shownScores[i] : p.score;
+    const active = S.winner == null && (busy ? animWho === i : S.turn === i);
+    const d = document.createElement('div');
+    d.className = 'pl' + (active ? ' active' : '');
+    d.style.setProperty('--c', COLORS[i]);
+    d.innerHTML = `<div class="ring" id="ring${i}" style="--pct:${Math.min(1, score / WIN)}"><span class="sc">${score}</span></div><div class="pn">${p.name}</div><div class="bubble" id="bub${i}"></div>`;
+    el.append(d);
+  });
+}
+
+function renderTargets(anim = {}) {
+  const el = $('targets');
+  el.innerHTML = '';
+  (shownTargets || S.targets).forEach((t, k) => {
+    const d = document.createElement('div');
+    d.className = 'tgt' + (anim[k] ? ' ' + anim[k] : '');
+    d.id = 'tgt' + k;
+    d.setAttribute('aria-label', `Recipe: ${pairName(t)}`);
+    d.innerHTML = `<div class="pair">${chip(t[0])}+${chip(t[1])}</div><div class="tn">${pairName(t)}</div>`;
+    el.append(d);
+  });
+}
+
+function paintStone(stone, marks = {}) {
+  const el = $('stone');
+  el.innerHTML = '';
+  el.style.setProperty('--n', Math.max(stone.length, 6));
+  if (marks.bc) el.style.setProperty('--bc', marks.bc);
+  const card = marks.preview && lifted != null ? me().hand[lifted] : null;
+  [...stone].forEach((e, i) => {
+    const t = document.createElement('button');
+    t.type = 'button';
+    t.className = `tile el-${e}`;
+    t.dataset.i = i;
+    t.innerHTML = `${ico('el-' + e)}<span class="cap">${EL_NAME[e]}</span>`;
+    if (inRange(marks.fresh, i)) t.classList.add('fresh');
+    if (inRange(marks.carve, i)) t.classList.add('carve');
+    if (inRange(marks.crack, i)) t.classList.add('crack');
+    if (marks.botsel === i) t.classList.add('botsel');
+    let label = EL_NAME[e];
+    if (card) {
+      const r = tryPlay(stone, card, i);
+      if (r.ok) {
+        const scores = carvesOn(S, r.ns) > 0;
+        const pv = document.createElement('span');
+        pv.className = 'pv' + (r.span === 2 ? ' mixpv' : '');
+        pv.innerHTML = r.res === '' ? '<span class="gone">✕</span>' : [...r.res].map(x => chip(x)).join('');
+        t.append(pv);
+        t.classList.add('canplay');
+        if (scores) t.classList.add('gold');
+        label += `: becomes ${r.res === '' ? 'nothing' : [...r.res].map(x => EL_NAME[x]).join(' and ')}${scores ? ', brews a recipe' : ''}`;
+      } else {
+        t.classList.add('dim');
+      }
+    }
+    t.setAttribute('aria-label', label);
+    t.addEventListener('click', () => onTile(i));
+    el.append(t);
+  });
+}
+
+function renderCoach() {
+  const el = $('coach');
+  el.innerHTML = '';
+  const msg = html => { const p = document.createElement('p'); p.className = 'msg'; p.innerHTML = html; el.append(p); };
+  if (busy) { msg(coachBusy || '&nbsp;'); return; }
+  if (S.winner != null) {
+    const w = S.players[S.winner];
+    msg(w.human ? 'You won!' : `${w.name} won this time.`);
+    const b = document.createElement('button');
+    b.className = 'again'; b.type = 'button'; b.textContent = 'PLAY AGAIN';
+    b.addEventListener('click', () => startNew(S.players.length - 1));
+    el.append(b);
+    return;
+  }
+  const cur = S.players[S.turn];
+  if (!cur.human) { msg(`<span style="color:${COLORS[S.turn]}">${cur.name}</span> is casting…`); return; }
+  if (hintMsg) { msg(hintMsg); return; }
+  if (lifted == null) {
+    if (!anyMove()) { msg('None of your spells work here. Tap <b>New cards</b>.'); return; }
+    msg(me().hand.some(cardScores)
+      ? 'Your turn! Tap a spell card. <span class="gold">★ cards can brew now.</span>'
+      : 'Your turn! Tap a spell card. Nothing brews this turn, so set something up.');
+    return;
+  }
+  const c = me().hand[lifted];
+  if (cardScores(c)) msg('Now tap an element. <span class="gold">Tap a gold one to brew!</span>');
+  else msg(`${CARD_HELP[c]}. Tap an element. The bubbles show what it becomes.`);
+}
+
+function renderHand() {
+  const el = $('hand');
+  el.innerHTML = '';
+  const my = humanTurn();
+  me().hand.forEach((c, h) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `card t-${c}`;
+    if (lifted === h) b.classList.add('lift');
+    else if (lifted != null) b.classList.add('other');
+    if (!my) b.classList.add('idle');
+    const star = my && cardScores(c);
+    b.innerHTML = `<span class="band">${CARD_ICON[c]}<span class="cname">${CARD_INFO[c].name.toUpperCase()}</span></span><span class="rules">${cardRules(c)}</span>` +
+      (star ? '<span class="star" aria-hidden="true">★</span>' : '');
+    b.setAttribute('aria-label', `${CARD_INFO[c].name} spell. ${CARD_HELP[c]}.${star ? ' Can brew now.' : ''}`);
+    b.addEventListener('click', () => onCard(h));
+    el.append(b);
+  });
+}
+
+function renderButtons() {
+  const my = humanTurn();
+  $('hintBtn').disabled = !my;
+  $('swapBtn').disabled = !my;
+  $('swapBtn').classList.toggle('armed', swapArmed && my);
+  $('swapLabel').textContent = swapArmed && my ? 'Sure?' : 'New cards';
+  $('soundBtn').textContent = muted ? 'Sound: off' : 'Sound: on';
+}
+
+function placeFinger() {
+  const f = $('finger');
+  let target = null;
+  if (!tutDone && humanTurn()) {
+    if (lifted == null) {
+      const h = me().hand.findIndex(cardScores);
+      if (h >= 0) target = $('hand').children[h];
+    } else {
+      target = $('stone').querySelector('.tile.gold');
+    }
+  }
+  if (hintTile >= 0 && humanTurn() && lifted != null) target = $('stone').children[hintTile] || target;
+  f.hidden = !target;
+  if (!target) return;
+  const r = target.getBoundingClientRect();
+  f.style.left = (r.left + r.width / 2) + 'px';
+  f.style.top = (r.top + r.height + (target.classList.contains('tile') ? 40 : 6)) + 'px';
+}
+
+function render() {
+  renderPlayers();
+  renderTargets();
+  paintStone(S.stone, { preview: humanTurn() });
+  renderCoach();
+  renderHand();
+  renderButtons();
+  placeFinger();
+}
+
+/* ---------- Input ---------- */
+function onCard(h) {
+  if (!humanTurn()) return;
+  hintMsg = ''; hintTile = -1;
+  lifted = lifted === h ? null : h;
+  sfx.lift();
+  render();
+}
+
+function onTile(i) {
+  if (!humanTurn()) return;
+  if (lifted == null) {
+    hintMsg = 'First tap one of your spell cards, then tap an element.';
+    sfx.bad();
+    render();
+    for (const c of $('hand').children) c.classList.add('wiggle');
+    return;
+  }
+  const r = tryPlay(S.stone, me().hand[lifted], i);
+  if (!r.ok) {
+    hintMsg = `<span class="warn">${r.why}.</span> Tap another element.`;
+    sfx.bad();
+    render();
+    return;
+  }
+  performTurn(0, { h: lifted, i });
+}
+
+$('hintBtn').addEventListener('click', () => {
+  if (!humanTurn()) return;
+  const m = chooseMove(S, 0, 0);
+  if (!m) { lifted = null; hintTile = -1; hintMsg = 'None of your spells work here. Tap New cards.'; }
+  else {
+    lifted = m.h;
+    hintTile = m.i;
+    hintMsg = carvesOn(S, m.ns) > 0
+      ? 'Tap the element with the white dot to brew!'
+      : 'Nothing brews right now. Tap the element with the white dot. It is the safest move.';
+  }
+  sfx.lift();
+  render();
+});
+
+$('swapBtn').addEventListener('click', () => {
+  if (!humanTurn()) return;
+  if (!swapArmed) {
+    swapArmed = true;
+    renderButtons();
+    clearTimeout(swapTimer);
+    swapTimer = setTimeout(() => { swapArmed = false; renderButtons(); }, 2500);
+    return;
+  }
+  swapArmed = false;
+  clearTimeout(swapTimer);
+  performTurn(0, null);
+});
+
+/* ---------- Effects ---------- */
+const rectOf = el => el.getBoundingClientRect();
+const centerRect = (r, w, h) => ({ left: r.left + r.width / 2 - w / 2, top: r.top + r.height / 2 - h / 2, width: w, height: h });
+
+function fly(el, from, to, dur, { scale = .4, rot = 0, fade = true } = {}) {
+  el.style.left = from.left + 'px';
+  el.style.top = from.top + 'px';
+  el.style.width = from.width + 'px';
+  el.style.height = from.height + 'px';
+  $('fx').append(el);
+  const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+  const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+  if (reduced || !el.animate) { el.remove(); return Promise.resolve(); }
+  const a = el.animate([
+    { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 1 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${scale}) rotate(${rot}deg)`, opacity: fade ? 0 : 1 },
+  ], { duration: dur, easing: 'cubic-bezier(.55,0,.25,1)', fill: 'forwards' });
+  return a.finished.then(() => el.remove(), () => el.remove());
+}
+function flyCard(c, from, to, dur = 420) {
+  const el = document.createElement('div');
+  el.className = `card t-${c}`;
+  el.innerHTML = `<span class="band" style="height:100%;border-radius:8px">${CARD_ICON[c]}<span class="cname">${CARD_INFO[c].name.toUpperCase()}</span></span>`;
+  return fly(el, from, to, dur, { scale: .45, rot: 10, fade: true });
+}
+function sparks(rect, color) {
+  if (reduced) return;
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  for (let k = 0; k < 10; k++) {
+    const s = document.createElement('div');
+    s.className = 'spark';
+    if (color) { s.style.background = color; s.style.boxShadow = `0 0 10px ${color}`; }
+    s.style.left = cx - 4 + 'px';
+    s.style.top = cy - 4 + 'px';
+    $('fx').append(s);
+    const ang = Math.random() * Math.PI * 2, dist = 24 + Math.random() * 30;
+    s.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist}px) scale(.2)`, opacity: 0 },
+    ], { duration: 500 + Math.random() * 250, easing: 'ease-out', fill: 'forwards' }).finished.then(() => s.remove(), () => s.remove());
+  }
+}
+function floatText(text, rect) {
+  const f = document.createElement('div');
+  f.className = 'float';
+  f.textContent = text;
+  f.style.left = rect.left + rect.width / 2 + 'px';
+  f.style.top = rect.top + rect.height / 2 + 'px';
+  $('fx').append(f);
+  if (reduced || !f.animate) { setTimeout(() => f.remove(), 700); return; }
+  f.animate([
+    { transform: 'translate(-50%,-50%) scale(.6)', opacity: 0 },
+    { transform: 'translate(-50%,-90%) scale(1.15)', opacity: 1, offset: .25 },
+    { transform: 'translate(-50%,-190%) scale(1)', opacity: 0 },
+  ], { duration: 1100, easing: 'ease-out', fill: 'forwards' }).finished.then(() => f.remove(), () => f.remove());
+}
+function bubble(pi, text) {
+  const b = $('bub' + pi);
+  if (!b) return;
+  b.textContent = text;
+  b.classList.add('show');
+  clearTimeout(b._t);
+  b._t = setTimeout(() => b.classList.remove('show'), 1900);
+}
+function banner(text) {
+  const b = $('banner');
+  b.textContent = text;
+  b.classList.remove('go');
+  void b.offsetWidth;
+  b.classList.add('go');
+}
+
+/* ---------- Turn flow ---------- */
+async function performTurn(pi, mv) {
+  if (busy) return;
+  const e = epoch;
+  const ok = () => e === epoch;
+  const p = S.players[pi];
+  const sp = p.human ? 1 : .5;  // rivals' turns play faster
+  const card = mv ? p.hand[mv.h] : null;
+  const cardEl = p.human && mv ? $('hand').children[mv.h] : null;
+  const cardRect = cardEl ? rectOf(cardEl) : null;
+  shownScores = S.players.map(x => x.score);
+  shownTargets = S.targets.slice();
+  busy = true; animWho = pi;
+  lifted = null; hintMsg = ''; hintTile = -1;
+  $('finger').hidden = true;
+
+  const info = applyTurn(S, pi, mv);
+  save();
+  if (p.human && mv && !tutDone) { tutDone = true; pref('transmute-tut', '1'); }
+
+  const who = p.human ? 'You' : p.name;
+  coachBusy = p.human ? '&nbsp;' : `<span style="color:${COLORS[pi]}">${p.name}</span> is casting…`;
+  renderPlayers(); renderCoach(); renderButtons();
+  paintStone(info.before, {});
+  for (const c of $('hand').children) c.classList.add('idle');
+
+  if (mv) {
+    const tileR = rectOf($('stone').children[mv.i]);
+    const to = centerRect(tileR, 60, 84);
+    if (p.human) {
+      if (cardEl) cardEl.style.visibility = 'hidden';
+      await flyCard(card, cardRect, to);
+    } else {
+      bubble(pi, `${CARD_INFO[card].name} on ${EL_NAME[info.piece]}`);
+      await sleep(sp * 600); if (!ok()) return;
+      paintStone(info.before, { botsel: mv.i, bc: COLORS[pi] });
+      await flyCard(card, centerRect(rectOf($('ring' + pi)), 60, 84), to, 280);
+      if (!ok()) return;
+      await sleep(sp * 250);
+    }
+    if (!ok()) return;
+    paintStone(info.before, { crack: [mv.i, mv.i + info.span - 1] });
+    sfx.zap(); buzz(15);
+    sparks(tileR, getComputedStyle(document.documentElement).getPropertyValue('--glow'));
+    await sleep(sp * 340); if (!ok()) return;
+    paintStone(info.mid, { fresh: info.res ? [mv.i, mv.i + info.res.length - 1] : null });
+    if (info.res) sfx.pop();
+    const result = info.res === '' ? 'blown away' : [...info.res].map(x => EL_NAME[x]).join(' + ');
+    coachBusy = `${who} cast ${CARD_INFO[card].name}: <b class="el">${EL_NAME[info.piece]}${info.span === 2 ? ' + ' + EL_NAME[info.before[mv.i + 1]] : ''}</b> → <b class="el">${result}</b>`;
+    renderCoach();
+    await sleep(sp * 750); if (!ok()) return;
+  } else {
+    bubble(pi, 'New cards!');
+    sfx.swap();
+    coachBusy = `${who} swapped for new spell cards.`;
+    renderCoach();
+    await sleep(sp * 900); if (!ok()) return;
+  }
+
+  let k = 0;
+  for (const ev of info.events) {
+    if (ev.type === 'carve') {
+      renderTargets({ [ev.slot]: 'hit' });
+      paintStone(ev.before, { carve: [ev.idx, ev.idx + 1] });
+      sfx.brew(k);
+      coachBusy = `<span class="gold">${who} brewed ${pairName(ev.num)}! +1</span>`;
+      renderCoach();
+      if (!p.human) bubble(pi, 'Brewed it!');
+      await sleep(sp * 500); if (!ok()) return;
+      const ring = rectOf($('ring' + pi));
+      for (const t of $('stone').querySelectorAll('.tile.carve')) {
+        const clone = t.cloneNode(true);
+        clone.classList.remove('carve');
+        clone.querySelector('.cap')?.remove();
+        t.style.visibility = 'hidden';
+        sparks(rectOf(t));
+        fly(clone, rectOf(t), centerRect(ring, 20, 20), 600 * sp, { scale: .5 });
+      }
+      await sleep(sp * 600); if (!ok()) return;
+      shownScores[pi]++;
+      renderPlayers();
+      floatText('+1', rectOf($('ring' + pi)));
+      buzz(25);
+      paintStone(ev.before.slice(0, ev.idx) + ev.before.slice(ev.idx + 2), {});
+      shownTargets[ev.slot] = ev.next;
+      renderTargets({ [ev.slot]: 'new' });
+      await sleep(sp * 650); if (!ok()) return;
+      k++;
+    } else if (ev.type === 'refill') {
+      paintStone(ev.after, { fresh: [ev.from, ev.after.length - 1] });
+      sfx.pop();
+      await sleep(sp * 500); if (!ok()) return;
+    }
+  }
+
+  if (info.refresh) {
+    shownTargets[info.refresh.slot] = info.refresh.next;
+    renderTargets({ [info.refresh.slot]: 'new' });
+    coachBusy = `Nobody brewed ${pairName(info.refresh.old)}, so it changed to ${pairName(info.refresh.next)}.`;
+    renderCoach();
+    sfx.swap();
+    await sleep(1400); if (!ok()) return;
+  }
+
+  busy = false; animWho = -1; shownScores = null; shownTargets = null; coachBusy = '';
+  render();
+  if (S.winner != null) { showWin(); return; }
+  if (S.players[S.turn].human) { banner('YOUR TURN'); sfx.turn(); }
+  maybeBot();
+}
+
+function maybeBot() {
+  if (S.winner != null || busy || S.players[S.turn].human) return;
+  const e = epoch;
+  setTimeout(() => {
+    if (e !== epoch || busy || S.winner != null || S.players[S.turn].human) return;
+    performTurn(S.turn, chooseMove(S, S.turn));
+  }, reduced ? 200 : 300);
+}
+
+/* ---------- Win screen ---------- */
+let confettiRaf = 0;
+function showWin() {
+  const w = S.players[S.winner];
+  $('winTitle').textContent = w.human ? 'You win!' : `${w.name} wins`;
+  $('final').innerHTML = S.players.map((p, i) => ({ p, i })).sort((x, y) => y.p.score - x.p.score)
+    .map(({ p, i }) => `<div><span style="color:${COLORS[i]}">${p.name}</span><b>${p.score}</b></div>`).join('');
+  $('win').hidden = false;
+  if (w.human) { sfx.win(); confetti(); } else sfx.lose();
+}
+function confetti() {
+  if (reduced) return;
+  const c = $('confetti');
+  const ctx = c.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  c.width = c.clientWidth * dpr; c.height = c.clientHeight * dpr;
+  const cols = ['#ffd76a', '#ff8a3d', '#5ab2ff', '#82dc72', '#9ff3ff', '#c3a8ff'];
+  const parts = Array.from({ length: 140 }, () => ({
+    x: Math.random() * c.width, y: -Math.random() * c.height * .6,
+    vx: (Math.random() - .5) * 2 * dpr, vy: (2 + Math.random() * 3) * dpr,
+    r: Math.random() * 6.28, vr: (Math.random() - .5) * .3,
+    s: (5 + Math.random() * 6) * dpr, col: cols[Math.floor(Math.random() * cols.length)],
+  }));
+  const t0 = performance.now();
+  cancelAnimationFrame(confettiRaf);
+  const step = now => {
+    ctx.clearRect(0, 0, c.width, c.height);
+    for (const q of parts) {
+      q.x += q.vx; q.y += q.vy; q.r += q.vr; q.vy += .03 * dpr;
+      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.r);
+      ctx.fillStyle = q.col; ctx.fillRect(-q.s / 2, -q.s / 4, q.s, q.s / 2);
+      ctx.restore();
+    }
+    if (now - t0 < 4000) confettiRaf = requestAnimationFrame(step);
+    else ctx.clearRect(0, 0, c.width, c.height);
+  };
+  confettiRaf = requestAnimationFrame(step);
+}
+
+/* ---------- How to play (built from the real rules) ---------- */
+function buildHowTo() {
+  $('demo1').innerHTML = `<span class="tgt" style="width:auto;padding:5px 8px"><span class="pair">${chip('F')}+${chip('W')}</span></span><span class="arrow">on</span>` +
+    [...'EIFAW'].map(e => chip(e, 'mini')).join('');
+  $('demo2').innerHTML = `<span class="mini-card" style="--tc:var(--c-heat)">${ico('el-F')}</span><span class="arrow">on Ice →</span>` +
+    [...'EWFAW'].map((e, i) => chip(e, i === 1 || i === 2 ? 'mini hl' : 'mini')).join('');
+  const seq = (l, dir) => `<span class="seq">${(dir > 0 ? [...l] : [...l].reverse()).map(e => chip(e, 'mini')).join('<span class="arrow">›</span>')}</span>`;
+  $('ref').innerHTML = [
+    `<div><span class="mini-card" style="--tc:var(--c-heat)">${ico('el-F')}</span><div><b>Heat</b>: one step up a ladder<br>${seq(LADDERS[0], 1)}${seq(LADDERS[1], 1)}</div></div>`,
+    `<div><span class="mini-card" style="--tc:var(--c-cool)">${ico('el-I')}</span><div><b>Cool</b>: one step back down the same ladders</div></div>`,
+    `<div><span class="mini-card" style="--tc:var(--c-mix)">${ico('c-mix')}</span><div><b>Mix</b>: joins an element with the one on its right<br>${MIXES.map(([a, b, r]) => `<span class="seq">${chip(a, 'mini')}+${chip(b, 'mini')}=${chip(r, 'mini')}</span>`).join(' ')}</div></div>`,
+    `<div><span class="mini-card" style="--tc:var(--c-dbl)">${ico('c-dbl')}</span><div><b>Double</b>: makes a copy right next to it</div></div>`,
+    `<div><span class="mini-card" style="--tc:var(--c-blow)">${ico('el-A')}</span><div><b>Blow away</b>: removes an element from the shelf</div></div>`,
+  ].join('');
+  $('legend').innerHTML = Object.keys(EL_NAME).map(e => `<div>${chip(e, 'mini')}${EL_NAME[e]}</div>`).join('');
+}
+
+/* ---------- Menus ---------- */
+function startNew(nBots) {
+  epoch++;
+  busy = false; animWho = -1; lifted = null; hintMsg = ''; hintTile = -1; coachBusy = '';
+  shownScores = null; shownTargets = null;
+  S = newGame(nBots, !tutDone);
+  save();
+  $('menu').hidden = true;
+  $('win').hidden = true;
+  $('fx').innerHTML = '';
+  render();
+  banner('YOUR TURN');
+}
+$('menuBtn').addEventListener('click', () => { $('menu').hidden = false; renderButtons(); });
+$('menuClose').addEventListener('click', () => { $('menu').hidden = true; });
+$('menu').addEventListener('click', e => { if (e.target.id === 'menu') $('menu').hidden = true; });
+for (const n of [1, 2, 3]) $('opp' + n).addEventListener('click', () => startNew(n));
+$('howBtn').addEventListener('click', () => { $('menu').hidden = true; $('howto').hidden = false; });
+$('howClose').addEventListener('click', () => { $('howto').hidden = true; });
+$('howto').addEventListener('click', e => { if (e.target.id === 'howto') $('howto').hidden = true; });
+$('soundBtn').addEventListener('click', () => { muted = !muted; pref('transmute-muted', muted ? '1' : '0'); renderButtons(); if (!muted) sfx.lift(); });
+$('againBtn').addEventListener('click', () => startNew(S.players.length - 1));
+$('winMenuBtn').addEventListener('click', () => { $('win').hidden = true; $('menu').hidden = false; });
+window.addEventListener('resize', () => { if (S && !busy) placeFinger(); });
+
+function boot(data) {
+  buildHowTo();
+  S = (data && data.S && data.S.v === 3 && data.S) || load() || newGame(2, !tutDone);
+  render();
+  if (S.winner != null) showWin();
+  else maybeBot();
+}
+try { window.claude?.hot?.snapshot?.(() => ({ S })); } catch (e) {}
+if (window.claude?.hot?.ready) window.claude.hot.ready(boot);
+else boot(window.claude?.hot?.data ?? {});
+</script>

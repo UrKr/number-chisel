@@ -1108,11 +1108,11 @@ function fly(el, from, to, dur, { scale = .4, rot = 0, fade = true } = {}) {
   ], { duration: dur, easing: 'cubic-bezier(.55,0,.25,1)', fill: 'forwards' });
   return a.finished.then(() => el.remove(), () => el.remove());
 }
-function flyCard(c, from, to) {
+function flyCard(c, from, to, dur = 420) {
   const el = document.createElement('div');
   el.className = `card t-${c}`;
   el.innerHTML = `<span class="band"><span class="sym">${CARD_INFO[c].sym}</span></span><span class="cname">${CARD_INFO[c].name}</span>`;
-  return fly(el, from, to, 420, { scale: .45, rot: 10, fade: true });
+  return fly(el, from, to, dur, { scale: .45, rot: 10, fade: true });
 }
 function floatText(text, rect) {
   const f = document.createElement('div');
@@ -1157,6 +1157,7 @@ async function performTurn(pi, mv) {
   const e = epoch;
   const ok = () => e === epoch;
   const p = S.players[pi];
+  const sp = p.human ? 1 : .45;  // rivals' turns play faster
   const card = mv ? p.hand[mv.h] : null;
   const cardEl = p.human && mv ? $('hand').children[mv.h] : null;
   const cardRect = cardEl ? rectOf(cardEl) : null;
@@ -1184,27 +1185,27 @@ async function performTurn(pi, mv) {
       await flyCard(card, cardRect, to);
     } else {
       bubble(pi, `${CARD_INFO[card].sym} on ${info.digit}`);
-      await sleep(450); if (!ok()) return;
+      await sleep(sp * 450); if (!ok()) return;
       paintStone(info.before, { botsel: mv.i, bc: COLORS[pi] });
-      await flyCard(card, centerRect(rectOf($('ring' + pi)), 60, 84), to);
+      await flyCard(card, centerRect(rectOf($('ring' + pi)), 60, 84), to, 260);
       if (!ok()) return;
-      await sleep(250);
+      await sleep(sp * 250);
     }
     if (!ok()) return;
     paintStone(info.before, { crack: mv.i });
     sfx.strike(); buzz(15); shake();
-    await sleep(320); if (!ok()) return;
+    await sleep(sp * 320); if (!ok()) return;
     paintStone(info.mid, { fresh: info.res ? [mv.i, mv.i + info.res.length - 1] : null });
     if (info.res) sfx.drop();
     coachBusy = `${who} changed <span class="num">${info.digit}</span> into <span class="num">${info.res || 'nothing'}</span>`;
     renderCoach();
-    await sleep(650); if (!ok()) return;
+    await sleep(sp * 650); if (!ok()) return;
   } else {
     bubble(pi, 'New cards!');
     sfx.swap();
     coachBusy = `${who} swapped for new cards.`;
     renderCoach();
-    await sleep(900); if (!ok()) return;
+    await sleep(sp * 900); if (!ok()) return;
   }
 
   let k = 0;
@@ -1216,16 +1217,16 @@ async function performTurn(pi, mv) {
       coachBusy = `<span class="gold">${who} made ${ev.num}! +1 point</span>`;
       renderCoach();
       if (!p.human) bubble(pi, `Made ${ev.num}!`);
-      await sleep(450); if (!ok()) return;
+      await sleep(sp * 450); if (!ok()) return;
       const ring = rectOf($('ring' + pi));
       for (const t of $('stone').querySelectorAll('.tile.carve')) {
         const clone = t.cloneNode(true);
         clone.classList.remove('carve');
         clone.style.background = 'linear-gradient(180deg,#fff6c9,#ffd34d)';
         t.style.visibility = 'hidden';
-        fly(clone, rectOf(t), centerRect(ring, 20, 26), 560, { scale: .5 });
+        fly(clone, rectOf(t), centerRect(ring, 20, 26), 560 * sp, { scale: .5 });
       }
-      await sleep(560); if (!ok()) return;
+      await sleep(sp * 560); if (!ok()) return;
       shownScores[pi]++;
       renderPlayers();
       floatText('+1', rectOf($('ring' + pi)));
@@ -1233,12 +1234,12 @@ async function performTurn(pi, mv) {
       paintStone(ev.before.slice(0, ev.idx) + ev.before.slice(ev.idx + 2), {});
       shownTargets[ev.slot] = ev.next;
       renderTargets({ [ev.slot]: 'new' });
-      await sleep(600); if (!ok()) return;
+      await sleep(sp * 600); if (!ok()) return;
       k++;
     } else if (ev.type === 'refill') {
       paintStone(ev.after, { fresh: [ev.from, ev.after.length - 1] });
       sfx.drop();
-      await sleep(450); if (!ok()) return;
+      await sleep(sp * 450); if (!ok()) return;
     }
   }
 
@@ -1248,7 +1249,7 @@ async function performTurn(pi, mv) {
     coachBusy = `Nobody made ${info.refresh.old}, so it changed to ${info.refresh.next}.`;
     renderCoach();
     sfx.swap();
-    await sleep(1300); if (!ok()) return;
+    await sleep(sp * 1300); if (!ok()) return;
   }
 
   busy = false; animWho = -1; shownScores = null; shownTargets = null; coachBusy = '';
@@ -1264,7 +1265,7 @@ function maybeBot() {
   setTimeout(() => {
     if (e !== epoch || busy || S.winner != null || S.players[S.turn].human) return;
     performTurn(S.turn, chooseMove(S, S.turn));
-  }, reduced ? 300 : 600);
+  }, reduced ? 200 : 250);
 }
 
 /* ---------- Win screen ---------- */

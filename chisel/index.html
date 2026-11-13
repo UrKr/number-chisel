@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Nunito:wght@600;700;800;900&display=swap">
 <style>
-/* Layout: a card table seen from your seat. Rivals across the top, the Stone in the middle, your hand fanned at the bottom. */
+/* Layout: a card table from your seat. Rivals on top, the gold targets and the row of stone digits in the middle, your 3 cards at the bottom. */
 :root {
   color-scheme: dark;
   --felt-1: #1b5754;
@@ -24,16 +24,16 @@
   --amber: #ffb547;
   --amber-2: #ff8f1f;
   --gold: #ffd34d;
+  --gold-deep: #9c7410;
   --glow: #7ff0e0;
   --danger: #ff6b6b;
   --paper: #fbf5e6;
   --paper-ink: #33291c;
-  --t-sq: #e66a2c;
-  --t-rt: #2f7fd0;
-  --t-cu: #c8373a;
-  --t-cr: #8452c8;
-  --t-fl: #1f9a68;
-  --t-nu: #c9930f;
+  --c-inc: #1f9a68;
+  --c-dec: #2f7fd0;
+  --c-dbl: #e66a2c;
+  --c-sqr: #8452c8;
+  --c-sm: #c8373a;
   --font-display: "Alfa Slab One", "Rockwell", "Roboto Slab", Georgia, serif;
   --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -44,7 +44,7 @@ body {
   background-color: var(--felt-3);
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse 130% 85% at 50% 38%, var(--felt-1) 0%, var(--felt-2) 52%, var(--felt-3) 100%);
+    radial-gradient(ellipse 130% 85% at 50% 40%, var(--felt-1) 0%, var(--felt-2) 52%, var(--felt-3) 100%);
   background-attachment: fixed;
   color: var(--ink);
   font: 700 15px/1.4 var(--font-body);
@@ -52,7 +52,7 @@ body {
   overscroll-behavior: none;
 }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outline-offset: 2px; }
+button:focus-visible { outline: 3px solid var(--glow); outline-offset: 2px; }
 
 .game {
   height: 100%;
@@ -63,11 +63,11 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   flex-direction: column;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 10px 8px;
+  padding-block: 10px 6px;
   gap: 8px;
 }
 
-/* ---------- Players bar ---------- */
+/* ---------- Players ---------- */
 .topbar { display: flex; align-items: flex-start; gap: 6px; }
 .players { flex: 1; display: flex; gap: 6px; min-width: 0; }
 .pl { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 64px; }
@@ -92,8 +92,7 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
 .pl.active .pn { color: var(--ink); }
 .bubble {
   position: absolute;
-  top: 74px;
-  left: 50%;
+  top: 74px; left: 50%;
   transform: translate(-50%, -6px) scale(.8);
   background: var(--paper);
   color: var(--paper-ink);
@@ -117,21 +116,44 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   border-bottom-color: var(--paper);
 }
 .bubble.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.goal-note { font-size: 11px; color: var(--soft); text-align: right; line-height: 1.2; padding-top: 6px; white-space: nowrap; }
+.goal-note b { display: block; font: 15px/1.1 var(--font-display); color: var(--gold); font-weight: 400; }
 .menu-btn {
   width: 44px; height: 44px;
   border-radius: 12px;
   display: grid; place-items: center;
   background: rgba(255,255,255,.08);
   border: 1px solid rgba(255,255,255,.14);
+  flex: none;
 }
 
-/* ---------- The Stone ---------- */
-.table { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; min-height: 0; }
+/* ---------- Targets ---------- */
+.table { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: 0; }
+.targets-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.targets-label { font-size: 11px; letter-spacing: .16em; font-weight: 900; color: var(--gold); }
+.targets { display: flex; gap: 10px; justify-content: center; }
+.tgt {
+  width: 78px;
+  padding: 8px 0 7px;
+  background: linear-gradient(180deg, #fff3c4, var(--gold));
+  color: #5a3d00;
+  border-radius: 12px;
+  text-align: center;
+  font: 30px/1 var(--font-display);
+  letter-spacing: .04em;
+  box-shadow: 0 5px 0 var(--gold-deep), 0 10px 18px rgba(0,0,0,.35);
+}
+.tgt.hit { animation: hit .5s ease; }
+.tgt.new { animation: flipin .5s cubic-bezier(.3,1.5,.6,1); }
+@keyframes hit { 0% { transform: none; } 40% { transform: scale(1.2); box-shadow: 0 5px 0 var(--gold-deep), 0 0 34px var(--gold); } 100% { transform: none; } }
+@keyframes flipin { from { transform: rotateX(90deg); } to { transform: none; } }
+
+/* ---------- The row ---------- */
 .zone {
   position: relative;
   background: linear-gradient(180deg, #08201f, #0d2e30);
   border-radius: 20px;
-  padding: 22px 10px 12px;
+  padding: 44px 10px 18px;
   box-shadow: inset 0 5px 16px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.07);
 }
 .stone {
@@ -139,21 +161,18 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   display: flex;
   justify-content: center;
   gap: 5px;
-  min-height: 66px;
+  min-height: 60px;
   align-items: flex-end;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
 }
 .tile {
-  --w: min(46px, (100cqi - (var(--n) - 1) * 5px) / var(--n));
+  --w: min(50px, (100cqi - (var(--n) - 1) * 5px) / var(--n));
   flex: 0 0 var(--w);
   width: var(--w);
   height: calc(var(--w) * 1.28);
   display: grid;
   place-items: center;
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 26px;
   font-size: calc(var(--w) * .66);
   line-height: 1;
   color: var(--sand-ink);
@@ -166,37 +185,44 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
     0 4px 0 var(--sand-edge),
     0 7px 10px rgba(0,0,0,.45);
   position: relative;
-  cursor: pointer;
-  transition: transform .12s, background .12s, box-shadow .12s;
+  transition: transform .12s, opacity .15s, filter .15s;
 }
-.tile.sel {
-  background: linear-gradient(180deg, #ffe7a6, var(--amber));
-  color: #7a3d00;
-  transform: translateY(-8px);
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,.7),
-    0 4px 0 #b86a0a,
-    0 0 22px rgba(255,181,71,.75);
+.tile.dim { filter: brightness(.55) saturate(.6); }
+.tile.canplay { cursor: pointer; }
+.tile.canplay:active { transform: translateY(2px); }
+.tile .pv {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 26px;
+  padding: 4px 5px;
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-size: 14px;
+  text-shadow: none;
+  white-space: nowrap;
+  box-shadow: 0 3px 8px rgba(0,0,0,.4);
+  pointer-events: none;
 }
-.tile.botsel {
-  background: linear-gradient(180deg, #ffffff, var(--bc));
-  transform: translateY(-8px);
-  box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 22px var(--bc);
-}
-.tile.can { animation: can 1.3s ease-in-out infinite; }
-@keyframes can {
-  0%, 100% { box-shadow: inset 0 2px 0 rgba(255,255,255,.65), 0 4px 0 var(--sand-edge), 0 0 0 2px var(--glow), 0 0 6px var(--glow); }
-  50% { box-shadow: inset 0 2px 0 rgba(255,255,255,.65), 0 4px 0 var(--sand-edge), 0 0 0 2px var(--glow), 0 0 20px var(--glow); }
-}
-.tile.mine::after {
+.tile .pv::after {
   content: "";
   position: absolute;
-  left: 10%; right: 10%; bottom: -12px;
-  height: 4px;
-  border-radius: 3px;
-  background: var(--gold);
-  box-shadow: 0 0 10px var(--gold);
+  top: 100%; left: 50%;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-bottom: 0;
+  border-top-color: var(--paper);
 }
+.tile.gold { animation: wintile 1s ease-in-out infinite alternate; }
+.tile.gold .pv { background: var(--gold); color: #4a3000; }
+.tile.gold .pv::after { border-top-color: var(--gold); }
+@keyframes wintile {
+  from { box-shadow: inset 0 2px 0 rgba(255,255,255,.65), 0 4px 0 var(--sand-edge), 0 0 0 2px var(--gold), 0 0 4px var(--gold); }
+  to { box-shadow: inset 0 2px 0 rgba(255,255,255,.65), 0 4px 0 var(--sand-edge), 0 0 0 3px var(--gold), 0 0 22px var(--gold); }
+}
+.tile.botsel { background: linear-gradient(180deg, #ffffff, var(--bc)); transform: translateY(-8px); box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 22px var(--bc); }
 .tile.crack { animation: crack .32s ease-in forwards; }
 @keyframes crack {
   0% { transform: none; }
@@ -205,10 +231,7 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   100% { transform: translateY(10px) scale(.3) rotate(18deg); opacity: 0; }
 }
 .tile.fresh { animation: drop .5s cubic-bezier(.3,1.5,.6,1) both; background: linear-gradient(180deg, #ffffff, #ffe2a1); }
-@keyframes drop {
-  0% { transform: translateY(-46px) scale(1.15); opacity: 0; }
-  100% { transform: none; opacity: 1; }
-}
+@keyframes drop { 0% { transform: translateY(-46px) scale(1.15); opacity: 0; } 100% { transform: none; opacity: 1; } }
 .tile.carve {
   background: linear-gradient(180deg, #fff6c9, var(--gold));
   color: #7a5200;
@@ -216,95 +239,80 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   animation: pulse .35s ease-out;
 }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.18) translateY(-6px); } 100% { transform: translateY(-4px); } }
-.pips { display: flex; justify-content: center; gap: 4px; margin-top: 16px; }
-.pips i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.12); }
-.pips i.on { background: var(--sand-2); }
-.pips i.hot { background: var(--danger); }
-.zone-label {
-  position: absolute;
-  top: 6px; left: 0; right: 0;
-  text-align: center;
-  font-size: 10px;
-  letter-spacing: .18em;
-  color: rgba(167,201,195,.6);
-  font-weight: 800;
-}
-.finger {
-  position: absolute;
-  width: 26px; height: 26px;
-  margin: -13px 0 0 -13px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.85);
-  box-shadow: 0 0 0 6px rgba(255,255,255,.25);
-  pointer-events: none;
-  animation: swipe 1.8s ease-in-out infinite;
-  z-index: 3;
-}
-@keyframes swipe {
-  0% { transform: translateX(0) scale(.6); opacity: 0; }
-  15% { transform: translateX(0) scale(1); opacity: 1; }
-  70% { transform: translateX(var(--dx)) scale(1); opacity: 1; }
-  100% { transform: translateX(var(--dx)) scale(.6); opacity: 0; }
-}
 
-/* ---------- Coach line ---------- */
-.coach { min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
-.msg { margin: 0; font-size: 15px; max-width: 34ch; text-wrap: balance; }
-.msg .num { font-family: var(--font-display); font-weight: 400; color: var(--amber); }
+/* ---------- Coach ---------- */
+.coach { min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+.msg { margin: 0; font-size: 16px; max-width: 30ch; text-wrap: balance; }
 .msg .gold { color: var(--gold); }
 .msg .warn { color: var(--danger); }
-.msg .glowtxt { color: var(--glow); }
-.preview { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; }
-.preview .tile { --w: 24px; cursor: default; font-size: 16px; box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 0 var(--sand-edge); text-shadow: none; animation: none; transform: none; }
-.preview .tile.fresh { background: linear-gradient(180deg, #ffffff, #ffd98a); }
-.preview .tile.carve { background: linear-gradient(180deg, #fff6c9, var(--gold)); box-shadow: 0 2px 0 #b08a00, 0 0 10px var(--gold); }
-.strike {
-  font: 20px/1 var(--font-display);
-  letter-spacing: .04em;
+.msg .num { font-family: var(--font-display); font-weight: 400; color: var(--amber); }
+.again {
+  font: 18px/1 var(--font-display);
   color: #4a2300;
   background: linear-gradient(180deg, #ffd27a, var(--amber-2));
-  padding: 12px 34px;
+  padding: 12px 30px;
   border-radius: 999px;
-  box-shadow: 0 5px 0 #a85600, 0 10px 20px rgba(0,0,0,.35);
-  transition: transform .08s, box-shadow .08s;
+  box-shadow: 0 5px 0 #a85600;
 }
-.strike:active { transform: translateY(4px); box-shadow: 0 1px 0 #a85600, 0 4px 10px rgba(0,0,0,.35); }
 
-/* ---------- Your area ---------- */
-.me { display: flex; flex-direction: column; gap: 10px; }
-.targets-row { display: flex; gap: 8px; align-items: stretch; }
-.target {
-  flex: 1;
-  min-width: 0;
+/* ---------- Hand ---------- */
+.me { display: flex; align-items: flex-end; gap: 8px; }
+.hand { flex: 1; display: flex; justify-content: center; align-items: flex-end; gap: 6px; padding-top: 26px; min-height: 160px; }
+.card {
+  --tc: var(--c-inc);
+  --dy: 0px;
+  width: min(98px, 25vw);
+  aspect-ratio: 5 / 7;
+  border-radius: 12px;
   background: var(--paper);
   color: var(--paper-ink);
-  border-radius: 12px;
-  border: 2px solid #d9a520;
-  padding: 6px 10px;
-  position: relative;
+  border: 3px solid var(--tc);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 5px 0 #9c7410, 0 8px 14px rgba(0,0,0,.35);
+  align-items: center;
+  transform: translateY(var(--dy));
+  transition: transform .22s cubic-bezier(.3,1.4,.6,1), filter .2s, box-shadow .2s;
+  box-shadow: 0 8px 16px rgba(0,0,0,.45);
+  position: relative;
 }
-.target .tl { font-size: 9px; letter-spacing: .16em; font-weight: 900; color: #a07a1a; }
-.target .tn { font: 26px/1.05 var(--font-display); letter-spacing: .04em; }
-.target .tp { position: absolute; top: 6px; right: 6px; }
-.target .tp {
-  font: 12px/1 var(--font-display);
-  background: #d9a520;
-  color: #fff;
-  padding: 4px 5px;
-  border-radius: 8px;
-}
-.target.live { animation: live 1s ease-in-out infinite alternate; }
-.target.live .tl { color: #c0392b; }
-@keyframes live {
-  from { box-shadow: 0 5px 0 #9c7410, 0 0 0 rgba(255,211,77,0); }
-  to { box-shadow: 0 5px 0 #9c7410, 0 0 24px rgba(255,211,77,.9); }
-}
-.rbtn {
-  width: 56px;
+.card .band {
+  width: 100%;
+  height: 50%;
   flex: none;
+  background: var(--tc);
+  border-radius: 8px 8px 0 0;
+  display: grid;
+  place-items: center;
+  background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,.3), transparent 60%);
+}
+.card .sym { font: 34px/1 var(--font-display); color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.card .cname { font-size: 12px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; margin-top: 6px; }
+.card .cex { font: 13px/1.2 var(--font-display); color: #7a6a52; margin-top: 2px; }
+.card.t-inc { --tc: var(--c-inc); } .card.t-dec { --tc: var(--c-dec); } .card.t-dbl { --tc: var(--c-dbl); }
+.card.t-sqr { --tc: var(--c-sqr); } .card.t-sm { --tc: var(--c-sm); }
+.card .star {
+  position: absolute;
+  top: -12px; right: -10px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #5a3d00;
+  display: grid; place-items: center;
+  font-size: 17px;
+  box-shadow: 0 3px 0 var(--gold-deep), 0 0 14px rgba(255,211,77,.8);
+  animation: star 1.2s ease-in-out infinite alternate;
+}
+@keyframes star { from { transform: scale(1) rotate(-8deg); } to { transform: scale(1.12) rotate(8deg); } }
+.card.lift { --dy: -24px; z-index: 3; box-shadow: 0 0 0 3px #fff, 0 0 30px var(--tc), 0 16px 24px rgba(0,0,0,.5); }
+.card.other { filter: brightness(.7); }
+.card.idle { filter: brightness(.75); }
+.card.wiggle { animation: wiggle .4s ease; }
+@keyframes wiggle { 0%, 100% { transform: translateY(var(--dy)); } 25% { transform: translateY(var(--dy)) rotate(-6deg); } 75% { transform: translateY(var(--dy)) rotate(6deg); } }
+
+.side { display: flex; flex-direction: column; gap: 8px; padding-bottom: 4px; }
+.rbtn {
+  width: 58px;
+  min-height: 58px;
   border-radius: 14px;
   background: rgba(255,255,255,.08);
   border: 1px solid rgba(255,255,255,.16);
@@ -313,86 +321,38 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   font-size: 11px;
   font-weight: 900;
   color: var(--soft);
+  line-height: 1.1;
+  text-align: center;
 }
 .rbtn svg { width: 22px; height: 22px; }
 .rbtn:disabled { opacity: .35; cursor: default; }
 .rbtn.armed { background: var(--danger); color: #fff; border-color: var(--danger); }
 
-/* ---------- Hand ---------- */
-.hand { display: flex; justify-content: center; align-items: flex-end; padding: 20px 0 0; min-height: 140px; }
-.card {
-  --tc: var(--t-sq);
-  --rot: 0deg; --dy: 0px;
-  width: min(84px, 22.5vw);
-  aspect-ratio: 5 / 7;
-  margin: 0 -3px;
-  border-radius: 11px;
-  background: var(--paper);
-  color: var(--paper-ink);
-  border: 3px solid var(--tc);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: hidden;
-  transform-origin: 50% 130%;
-  transform: translateY(var(--dy)) rotate(var(--rot));
-  transition: transform .22s cubic-bezier(.3,1.4,.6,1), filter .2s, box-shadow .2s;
-  box-shadow: 0 8px 16px rgba(0,0,0,.45);
-  position: relative;
-}
-.card .band {
-  width: 100%;
-  height: 42%;
-  flex: none;
-  background: var(--tc);
-  display: grid;
-  place-items: center;
-  background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,.3), transparent 60%);
-}
-.card .sym { font: 27px/1 var(--font-display); color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
-.card .cname { font-size: 11px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; margin-top: 5px; }
-.card .crule { font-size: 10px; font-weight: 700; color: #7a6a52; line-height: 1.15; padding: 0 4px; text-align: center; }
-.card .badge {
-  margin-top: auto;
-  margin-bottom: 6px;
-  min-height: 22px;
-  max-width: 92%;
-  font: 14px/1 var(--font-display);
-  color: #fff;
-  background: var(--tc);
-  border-radius: 7px;
-  padding: 4px 6px;
-  display: grid; place-items: center;
-}
-.card .badge:empty { visibility: hidden; }
-.card .badge.why { font: 800 9.5px/1.1 var(--font-body); background: #e3dccb; color: #6d6150; }
-.card.t-sq { --tc: var(--t-sq); } .card.t-rt { --tc: var(--t-rt); } .card.t-cu { --tc: var(--t-cu); }
-.card.t-cr { --tc: var(--t-cr); } .card.t-fl { --tc: var(--t-fl); } .card.t-nu { --tc: var(--t-nu); }
-.card.ok { --dy: -10px; box-shadow: 0 0 0 2px #fff, 0 0 20px rgba(255,231,160,.85), 0 10px 18px rgba(0,0,0,.4); }
-.card.no { filter: grayscale(.85) brightness(.7); }
-.card.lift { --dy: -30px; --rot: 0deg; z-index: 3; box-shadow: 0 0 0 3px #fff, 0 0 30px var(--tc), 0 16px 24px rgba(0,0,0,.5); }
-.card.idle { filter: brightness(.8); }
-.card .nudge { display: flex; gap: 4px; margin-top: 4px; }
-.card .nudge i {
-  font-style: normal;
-  font: 12px/1 var(--font-display);
-  padding: 5px 6px;
-  border-radius: 6px;
-  border: 2px solid var(--tc);
-  color: var(--tc);
-}
-.card .nudge i.on { background: var(--tc); color: #fff; }
-
 /* ---------- FX ---------- */
 .fx { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
 .fx > * { position: fixed; }
-.fx .card { margin: 0; transform: none; }
+.fx .card { transform: none; }
 .float {
   font: 26px/1 var(--font-display);
   color: var(--gold);
   text-shadow: 0 3px 0 #7a5200, 0 0 18px rgba(255,211,77,.8);
   white-space: nowrap;
   transform: translate(-50%, -50%);
+}
+.finger {
+  position: fixed;
+  width: 30px; height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.55);
+  pointer-events: none;
+  z-index: 28;
+  animation: tap 1.2s ease-out infinite;
+}
+@keyframes tap {
+  0% { transform: scale(.7); box-shadow: 0 0 0 0 rgba(255,255,255,.6); }
+  60% { transform: scale(1); box-shadow: 0 0 0 18px rgba(255,255,255,0); }
+  100% { transform: scale(.7); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
 }
 .banner {
   position: fixed;
@@ -409,7 +369,7 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   background: linear-gradient(90deg, transparent, rgba(4,20,22,.88) 20%, rgba(4,20,22,.88) 80%, transparent);
   opacity: 0;
 }
-.banner.go { animation: banner 1.2s ease both; }
+.banner.go { animation: banner 1.1s ease both; }
 @keyframes banner {
   0% { opacity: 0; transform: translateX(-30%); }
   20% { opacity: 1; transform: none; }
@@ -417,7 +377,7 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   100% { opacity: 0; transform: translateX(30%); }
 }
 
-/* ---------- Sheets & overlays ---------- */
+/* ---------- Sheets ---------- */
 .sheet {
   position: fixed;
   inset: 0;
@@ -438,11 +398,10 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   padding: 22px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
-.sheet-card h2 { margin: 0; font: 26px/1.1 var(--font-display); color: var(--amber); letter-spacing: .03em; }
-.sheet-card h3 { margin: 6px 0 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); }
-.sheet-card p { margin: 0; color: var(--soft); }
+.sheet-card h2 { margin: 0; font: 26px/1.1 var(--font-display); color: var(--amber); letter-spacing: .03em; font-weight: 400; }
+.sheet-card h3 { margin: 4px 0 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); }
 .big-btn {
   min-height: 52px;
   border-radius: 14px;
@@ -455,7 +414,7 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
 .big-btn.primary { background: linear-gradient(180deg, #ffd27a, var(--amber-2)); color: #4a2300; border: 0; box-shadow: 0 4px 0 #a85600; }
 .opp-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .opp-row .big-btn { flex-direction: column; gap: 0; min-height: 64px; }
-.opp-row .big-btn b { font: 24px/1 var(--font-display); color: var(--amber); }
+.opp-row .big-btn b { font: 24px/1 var(--font-display); color: var(--amber); font-weight: 400; }
 .opp-row .big-btn span { font-size: 11px; color: var(--soft); }
 .step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
 .step .n {
@@ -465,15 +424,16 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   font: 18px/1 var(--font-display);
 }
 .step .body { display: flex; flex-direction: column; gap: 8px; }
-.step .body p { color: var(--ink); }
+.step .body p { margin: 0; font-size: 16px; }
 .demo { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.demo .preview .tile.sel { background: linear-gradient(180deg, #ffe7a6, var(--amber)); }
 .demo .arrow { color: var(--soft); font-weight: 900; }
-.mini-card { display: inline-grid; place-items: center; width: 30px; height: 40px; border-radius: 6px; color: #fff; font: 15px/1 var(--font-display); background: var(--tc); border: 2px solid var(--paper); }
-.mini-target { display: inline-block; background: var(--paper); color: var(--paper-ink); border: 2px solid #d9a520; border-radius: 7px; padding: 3px 7px; font: 15px/1 var(--font-display); }
-.tool-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.tool-list div { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink); }
-.tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--ink); font-weight: 600; }
+.mini { display: inline-grid; place-items: center; width: 26px; height: 32px; border-radius: 5px; font: 16px/1 var(--font-display); color: var(--sand-ink); background: linear-gradient(180deg, var(--sand-1), var(--sand-2)); box-shadow: 0 2px 0 var(--sand-edge); }
+.mini.hl { background: linear-gradient(180deg, #fff6c9, var(--gold)); box-shadow: 0 2px 0 #b08a00, 0 0 10px var(--gold); }
+.mini-card { display: inline-grid; place-items: center; width: 32px; height: 42px; border-radius: 6px; color: #fff; font: 15px/1 var(--font-display); background: var(--tc); border: 2px solid var(--paper); flex: none; }
+.mini-tgt { display: inline-block; background: linear-gradient(180deg, #fff3c4, var(--gold)); color: #5a3d00; border-radius: 7px; padding: 4px 8px; font: 16px/1 var(--font-display); }
+.tool-list { display: flex; flex-direction: column; gap: 8px; }
+.tool-list div { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
 
 .win {
   position: fixed;
@@ -501,58 +461,60 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
   animation: popin .45s cubic-bezier(.3,1.5,.6,1) both;
 }
 @keyframes popin { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
-.win-card h2 { margin: 0; font: 36px/1 var(--font-display); color: var(--gold); text-shadow: 0 4px 0 #6b4a00; }
+.win-card h2 { margin: 0; font: 36px/1 var(--font-display); color: var(--gold); text-shadow: 0 4px 0 #6b4a00; font-weight: 400; }
 .final { display: flex; flex-direction: column; gap: 6px; }
 .final div { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,.06); }
-.final b { font: 18px/1 var(--font-display); }
+.final b { font: 18px/1 var(--font-display); font-weight: 400; }
 
 @media (prefers-reduced-motion: reduce) {
   .tile, .card, .ring { transition: none; }
-  .tile.can, .target.live, .finger { animation: none; }
-  .tile.crack, .tile.fresh, .tile.carve, .banner.go, .win-card { animation-duration: .01s; }
+  .tile.gold, .card .star, .finger { animation: none; }
+  .tile.crack, .tile.fresh, .tile.carve, .banner.go, .win-card, .tgt.hit, .tgt.new { animation-duration: .01s; }
 }
-@media (max-height: 640px) {
-  .coach { min-height: 84px; }
-  .hand { padding-top: 14px; min-height: 130px; }
-  .card { width: min(78px, 22vw); }
+@media (max-height: 660px) {
+  .hand { min-height: 140px; padding-top: 20px; }
+  .card { width: min(86px, 23vw); }
+  .table { gap: 8px; }
 }
 </style>
 
 <div class="game" id="game">
   <header class="topbar">
     <div class="players" id="players"></div>
+    <div class="goal-note">first to<b>5 points</b></div>
     <button class="menu-btn" id="menuBtn" type="button" aria-label="Menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
   </header>
 
   <main class="table">
+    <div class="targets-wrap">
+      <div class="targets-label">MAKE ONE OF THESE</div>
+      <div class="targets" id="targets"></div>
+    </div>
     <div class="zone" id="zone">
-      <div class="zone-label">THE STONE</div>
-      <div class="stone" id="stone" role="group" aria-label="The Stone"></div>
-      <div class="pips" id="pips" aria-hidden="true"></div>
-      <div class="finger" id="finger" hidden></div>
+      <div class="stone" id="stone" role="group" aria-label="Row of digits"></div>
     </div>
     <div class="coach" id="coach" aria-live="polite"></div>
   </main>
 
   <section class="me">
-    <div class="targets-row">
-      <div class="targets-row" id="targets" style="flex:1;min-width:0"></div>
-      <button class="rbtn" id="hintBtn" type="button" aria-label="Hint">
+    <div class="hand" id="hand"></div>
+    <div class="side">
+      <button class="rbtn" id="hintBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>
         Hint
       </button>
-      <button class="rbtn" id="swapBtn" type="button" aria-label="Swap all cards">
+      <button class="rbtn" id="swapBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>
-        <span id="swapLabel">Swap</span>
+        <span id="swapLabel">New cards</span>
       </button>
     </div>
-    <div class="hand" id="hand"></div>
   </section>
 </div>
 
 <div class="fx" id="fx"></div>
+<div class="finger" id="finger" hidden></div>
 <div class="banner" id="banner"></div>
 
 <div class="sheet" id="menu" hidden>
@@ -576,40 +538,36 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
     <div class="step">
       <span class="n">1</span>
       <div class="body">
-        <p>Swipe across digits on the Stone to pick them up.</p>
-        <div class="demo"><div class="preview"><span class="tile">3</span><span class="tile sel">1</span><span class="tile sel">6</span><span class="tile sel">9</span><span class="tile">2</span><span class="tile">5</span></div></div>
+        <p>Your goal: make one of the gold numbers appear in the row of digits.</p>
+        <div class="demo"><span class="mini-tgt">16</span><span class="arrow">in</span><span class="mini">5</span><span class="mini">4</span><span class="mini">1</span><span class="mini">7</span><span class="mini">2</span></div>
       </div>
     </div>
     <div class="step">
       <span class="n">2</span>
       <div class="body">
-        <p>Play a card on them. The digits change into the answer.</p>
-        <div class="demo"><span class="mini-card" style="--tc:var(--t-rt)">√</span><span class="arrow">→</span><div class="preview"><span class="tile">3</span><span class="tile fresh">1</span><span class="tile fresh">3</span><span class="tile">2</span><span class="tile">5</span></div></div>
+        <p>Tap one of your cards, then tap a digit. The card changes that digit.</p>
+        <div class="demo"><span class="mini-card" style="--tc:var(--c-sqr)">x²</span><span class="arrow">on 4 →</span><span class="mini">5</span><span class="mini hl">1</span><span class="mini hl">6</span><span class="mini">1</span><span class="mini">7</span><span class="mini">2</span></div>
       </div>
     </div>
     <div class="step">
       <span class="n">3</span>
       <div class="body">
-        <p>When one of your target numbers appears, you carve it out and score.</p>
-        <div class="demo"><span class="mini-target">32</span><span class="arrow">→</span><div class="preview"><span class="tile">3</span><span class="tile">1</span><span class="tile carve">3</span><span class="tile carve">2</span><span class="tile">5</span></div><span class="arrow">+2</span></div>
+        <p>You made 16! It's carved out and you get a point. First to 5 points wins.</p>
       </div>
     </div>
-    <h3>Good to know</h3>
+    <h3>Helpers</h3>
     <ul class="tips">
-      <li>First to 12 points wins. Big targets are worth 4.</li>
-      <li>Carving can push two of your targets together: that's a combo, +1 extra.</li>
-      <li>Rivals have secret targets too. Watch what you build.</li>
-      <li>The Stone holds 12 digits at most (the dots under it).</li>
-      <li>Stuck? Tap Hint, or Swap to trade all your cards (uses your turn).</li>
+      <li>A ★ on a card means it can score right now.</li>
+      <li>After you tap a card, bubbles show what each digit would become. Gold bubbles score.</li>
+      <li>Hint picks a move for you.</li>
     </ul>
     <h3>The cards</h3>
     <div class="tool-list">
-      <div><span class="mini-card" style="--tc:var(--t-sq)">x²</span>Square 1–2 digits</div>
-      <div><span class="mini-card" style="--tc:var(--t-rt)">√</span>Root of 49, 169…</div>
-      <div><span class="mini-card" style="--tc:var(--t-cu)">x³</span>Cube 1 digit</div>
-      <div><span class="mini-card" style="--tc:var(--t-cr)">∛</span>Root of 8, 27, 512…</div>
-      <div><span class="mini-card" style="--tc:var(--t-fl)">⇄</span>Flip 2–4 digits</div>
-      <div><span class="mini-card" style="--tc:var(--t-nu)">±1</span>One digit up or down</div>
+      <div><span class="mini-card" style="--tc:var(--c-inc)">+1</span>Adds one. 3 → 4, 9 → 10</div>
+      <div><span class="mini-card" style="--tc:var(--c-dec)">−1</span>Takes one away. 3 → 2</div>
+      <div><span class="mini-card" style="--tc:var(--c-dbl)">×2</span>Doubles it. 7 → 14</div>
+      <div><span class="mini-card" style="--tc:var(--c-sqr)">x²</span>Times itself. 4 → 16</div>
+      <div><span class="mini-card" style="--tc:var(--c-sm)">✕</span>Smashes the digit out of the row</div>
     </div>
     <button class="big-btn primary" type="button" id="howClose">Got it</button>
   </div>
@@ -627,18 +585,16 @@ button:focus-visible, .tile:focus-visible { outline: 3px solid var(--glow); outl
 
 <script>
 // ===== LOGIC START =====
-const MAX_LEN = 12, MIN_LEN = 4, HAND = 4, COMMS = 2, WIN = 12;
+const MAX_LEN = 10, MIN_LEN = 3, HAND = 3, WIN = 5;
 const NAMES = ['You', 'Flint', 'Basalt', 'Marble'];
-const TOOL_INFO = {
-  sq: { sym: 'x²', name: 'Square', rule: 'Square 1–2 digits' },
-  rt: { sym: '√', name: 'Root', rule: 'Root of a perfect square' },
-  cu: { sym: 'x³', name: 'Cube', rule: 'Cube 1 digit' },
-  cr: { sym: '∛', name: 'Cube root', rule: 'Root of a perfect cube' },
-  fl: { sym: '⇄', name: 'Flip', rule: 'Reverse 2–4 digits' },
-  nu: { sym: '±1', name: 'Nudge', rule: '+1 or −1 on 1 digit' },
+const CARD_INFO = {
+  inc: { sym: '+1', name: 'Plus 1', ex: '3 → 4' },
+  dec: { sym: '−1', name: 'Minus 1', ex: '3 → 2' },
+  dbl: { sym: '×2', name: 'Double', ex: '7 → 14' },
+  sqr: { sym: 'x²', name: 'Square', ex: '4 → 16' },
+  sm:  { sym: '✕', name: 'Smash', ex: 'removes it' },
 };
-const TOOL_MIX = { sq: 10, rt: 8, cu: 4, cr: 4, fl: 6, nu: 8 };
-const BIG = [121, 125, 144, 169, 196, 216, 225, 256, 289, 324, 343, 361, 441, 484, 512, 529, 576, 625, 676, 729, 784, 841, 961];
+const CARD_MIX = { inc: 6, dec: 6, dbl: 5, sqr: 5, sm: 6 };
 
 const rnd = n => Math.floor(Math.random() * n);
 function shuffle(a) {
@@ -647,213 +603,224 @@ function shuffle(a) {
 }
 function randDigits(n) { let s = ''; for (let i = 0; i < n; i++) s += rnd(10); return s; }
 
-function newCommission(existing) {
-  for (;;) {
-    const c = Math.random() < 0.25
-      ? { num: String(BIG[rnd(BIG.length)]), pts: 4 }
-      : { num: String(10 + rnd(90)), pts: 2 };
-    if (!existing.some(e => e.num === c.num)) return c;
+function cardResult(card, d) {
+  const n = Number(d);
+  switch (card) {
+    case 'inc': return { res: String(n + 1) };
+    case 'dec': return n > 0 ? { res: String(n - 1) } : { why: "0 can't go lower" };
+    case 'dbl': return n > 0 ? { res: String(n * 2) } : { why: '0 doubled is 0' };
+    case 'sqr': return n > 1 ? { res: String(n * n) } : { why: `${n}² is still ${n}` };
+    case 'sm': return { res: '' };
   }
+  return { why: '?' };
 }
 
-function applyTool(tool, run, dir) {
-  const n = Number(run);
-  switch (tool) {
-    case 'sq': return run.length <= 2 ? { res: String(n * n) } : { why: 'Needs 1–2 digits' };
-    case 'cu': return run.length === 1 ? { res: String(n ** 3) } : { why: 'Needs 1 digit' };
-    case 'rt': { const r = Math.round(Math.sqrt(n)); return r * r === n ? { res: String(r) } : { why: `${n} isn't a square` }; }
-    case 'cr': { const r = Math.round(Math.cbrt(n)); return r * r * r === n ? { res: String(r) } : { why: `${n} isn't a cube` }; }
-    case 'fl': return run.length >= 2 && run.length <= 4 ? { res: [...run].reverse().join('') } : { why: 'Needs 2–4 digits' };
-    case 'nu': return run.length === 1 ? { res: String((n + dir + 10) % 10) } : { why: 'Needs 1 digit' };
+function tryPlay(stone, card, i) {
+  const r = cardResult(card, stone[i]);
+  if (r.why) return { ok: false, why: r.why };
+  if (card === 'sm' && stone.length <= 2) return { ok: false, why: 'Row too short' };
+  const ns = stone.slice(0, i) + r.res + stone.slice(i + 1);
+  if (ns.length > MAX_LEN) return { ok: false, why: 'Row is full' };
+  return { ok: true, res: r.res, ns };
+}
+
+const N_TARGETS = 3;
+// New targets are numbers one card away from the current Stone, so there is always something to aim at.
+function newTarget(S) {
+  const ok = t => t[0] !== '0' && !S.stone.includes(t) && !S.targets.includes(t);
+  const near = new Set();
+  for (const c of Object.keys(CARD_INFO)) {
+    for (let i = 0; i < S.stone.length; i++) {
+      const r = tryPlay(S.stone, c, i);
+      if (!r.ok) continue;
+      const lo = Math.max(0, i - 2), hi = Math.min(r.ns.length, i + r.res.length + 2);
+      for (let j = lo; j + 2 <= hi; j++) { const t = r.ns.slice(j, j + 2); if (ok(t)) near.add(t); }
+    }
   }
-  return { why: 'Unknown tool' };
+  const list = [...near];
+  if (list.length) return list[rnd(list.length)];
+  for (;;) { const t = String(10 + rnd(90)); if (ok(t)) return t; }
 }
 
-function tryMove(stone, tool, a, b, dir) {
-  const run = stone.slice(a, b + 1);
-  const r = applyTool(tool, run, dir);
-  if (r.why) return { ok: false, why: r.why, run };
-  if (r.res === run) return { ok: false, why: 'No change', run };
-  const ns = stone.slice(0, a) + r.res + stone.slice(b + 1);
-  if (ns.length > MAX_LEN) return { ok: false, why: `Over ${MAX_LEN} digits`, run };
-  return { ok: true, run, res: r.res, ns };
-}
-
-function fmtOp(tool, run, dir) {
-  switch (tool) {
-    case 'sq': return `${run}²`;
-    case 'cu': return `${run}³`;
-    case 'rt': return `√${run}`;
-    case 'cr': return `∛${run}`;
-    case 'fl': return `⇄${run}`;
-    case 'nu': return `${run}${dir > 0 ? '+1' : '−1'}`;
-  }
-  return run;
-}
-
-function carveAll(stone, comms) {
-  const left = comms.map((c, i) => ({ c, i }));
-  const steps = [];
-  let found = true;
-  while (found) {
-    found = false;
-    for (let k = 0; k < left.length; k++) {
-      const { c, i } = left[k];
-      const idx = stone.indexOf(c.num);
+// After a move: any shared target showing in the Stone is carved and scored by the mover.
+function resolve(S, mover) {
+  const events = [];
+  for (let guard = 0; guard < 50; guard++) {
+    let hit = false;
+    for (let k = 0; k < S.targets.length; k++) {
+      const t = S.targets[k];
+      const idx = S.stone.indexOf(t);
       if (idx >= 0) {
-        steps.push({ before: stone, idx, len: c.num.length, comm: c, ci: i });
-        stone = stone.slice(0, idx) + stone.slice(idx + c.num.length);
-        left.splice(k, 1);
-        found = true;
+        events.push({ type: 'carve', pi: mover, idx, num: t, slot: k, before: S.stone });
+        S.stone = S.stone.slice(0, idx) + S.stone.slice(idx + t.length);
+        S.players[mover].score++;
+        S.targets[k] = '';
+        S.targets[k] = newTarget(S);
+        events[events.length - 1].next = S.targets[k];
+        hit = true;
         break;
       }
     }
+    if (hit) continue;
+    if (S.stone.length < MIN_LEN) {
+      const from = S.stone.length;
+      S.stone += randDigits(MIN_LEN - from);
+      events.push({ type: 'refill', from, after: S.stone });
+      continue;
+    }
+    break;
   }
-  const points = steps.reduce((s, x) => s + x.comm.pts, 0) + Math.max(0, steps.length - 1);
-  return { stone, steps, points };
+  return events;
 }
 
 function buildDeck() {
   const d = [];
-  for (const [t, n] of Object.entries(TOOL_MIX)) for (let i = 0; i < n; i++) d.push(t);
+  for (const [t, k] of Object.entries(CARD_MIX)) for (let i = 0; i < k; i++) d.push(t);
   return shuffle(d);
 }
-function drawTools(S, p) {
+function drawCards(S, p) {
   while (p.hand.length < HAND) {
     if (!S.deck.length) { S.deck = shuffle(S.discard); S.discard = []; }
     if (!S.deck.length) S.deck = buildDeck();
     p.hand.push(S.deck.pop());
   }
 }
-function drawComms(p) { while (p.comms.length < COMMS) p.comms.push(newCommission(p.comms)); }
 
-function newGame(nBots) {
-  const S = { v: 1, players: [], stone: randDigits(7), turn: 0, round: 1, deck: buildDeck(), discard: [], log: [], winner: null };
-  for (let i = 0; i <= nBots; i++) {
-    const p = { name: NAMES[i], human: i === 0, score: 0, hand: [], comms: [] };
-    drawTools(S, p); drawComms(p);
-    S.players.push(p);
+function newGame(nBots, tutorial) {
+  const S = { v: 2, players: [], stone: randDigits(6), targets: [], turn: 0, round: 1, dry: 0, slot: 0, deck: buildDeck(), discard: [], winner: null };
+  for (let i = 0; i <= nBots; i++) S.players.push({ name: NAMES[i], human: i === 0, score: 0, hand: [] });
+  for (let k = 0; k < N_TARGETS; k++) S.targets.push(newTarget(S));
+  for (const p of S.players) drawCards(S, p);
+  if (tutorial) {
+    // A first turn with an obvious win: Square the 4 to make 16.
+    S.stone = '54172';
+    S.targets = ['16', '38', '70'];
+    S.players[0].hand = ['sqr', 'inc', 'sm'];
   }
-  S.log.unshift({ who: -1, text: `New game against ${nBots} opponent${nBots > 1 ? 's' : ''}. First to ${WIN} points wins.` });
   return S;
 }
 
-// Commits a whole turn to S and returns what happened, for the animation.
+function legalMoves(S, pi) {
+  const p = S.players[pi], out = [];
+  const seen = new Set();
+  p.hand.forEach((c, h) => {
+    if (seen.has(c)) return;
+    seen.add(c);
+    for (let i = 0; i < S.stone.length; i++) { const r = tryPlay(S.stone, c, i); if (r.ok) out.push({ h, i, ns: r.ns }); }
+  });
+  return out;
+}
+
+// How many targets the mover would carve if the Stone became ns.
+function carvesOn(S, ns) {
+  let stone = ns, n = 0;
+  const left = S.targets.slice();
+  for (let guard = 0; guard < 6; guard++) {
+    const k = left.findIndex(t => stone.includes(t));
+    if (k < 0) break;
+    const idx = stone.indexOf(left[k]);
+    stone = stone.slice(0, idx) + stone.slice(idx + 2);
+    left.splice(k, 1);
+    n++;
+  }
+  return n;
+}
+
+// Is any target one card away? Used to value set-ups (good for me now, but a gift to the next player).
+function nearCount(S, ns) {
+  let near = 0;
+  for (const t of S.targets) {
+    for (let i = 0; i + 1 < ns.length + 1; i++) {
+      const a = ns[i], b = ns[i + 1];
+      if (b === undefined) break;
+      const m = (a === t[0]) + (b === t[1]);
+      if (m === 1 && Math.abs(Number(a + b) - Number(t)) <= 9) { near++; break; }
+    }
+  }
+  return near;
+}
+
+function evalMove(S, pi, ns, noise) {
+  let sc = carvesOn(S, ns) * 10;
+  sc -= nearCount(S, ns) * 1.5;
+  if (ns.length >= MAX_LEN - 1) sc -= .5;
+  return sc + Math.random() * noise;
+}
+
+function chooseMove(S, pi, noise = 1) {
+  let best = null, bestSc = -Infinity;
+  for (const m of legalMoves(S, pi)) {
+    const sc = evalMove(S, pi, m.ns, noise);
+    if (sc > bestSc) { bestSc = sc; best = m; }
+  }
+  return best;
+}
+
 function applyTurn(S, pi, mv) {
   const p = S.players[pi];
   const info = { pi, before: S.stone, mv };
-  let stone = S.stone;
-  let op;
   if (mv) {
-    const tool = p.hand[mv.h];
-    const r = tryMove(stone, tool, mv.a, mv.b, mv.dir);
+    const card = p.hand[mv.h];
+    const r = tryPlay(S.stone, card, mv.i);
     if (!r.ok) throw new Error('Illegal move');
-    info.strike = { tool, ...r };
+    info.card = card; info.res = r.res; info.digit = S.stone[mv.i]; info.mid = r.ns;
     p.hand.splice(mv.h, 1);
-    S.discard.push(tool);
-    stone = r.ns;
-    op = `${fmtOp(tool, r.run, mv.dir)} → ${r.res}`;
+    S.discard.push(card);
+    S.stone = r.ns;
   } else {
     S.discard.push(...p.hand);
     p.hand = [];
-    op = 'rested, swapped tools';
   }
-  const cr = carveAll(stone, p.comms);
-  info.carve = cr;
-  stone = cr.stone;
-  if (cr.steps.length) {
-    p.score += cr.points;
-    const used = new Set(cr.steps.map(s => s.ci));
-    p.comms = p.comms.filter((c, i) => !used.has(i));
+  info.events = resolve(S, pi);
+  // If nobody has scored for a whole round, one target is swapped for a fresh one.
+  if (info.events.some(e => e.type === 'carve')) S.dry = 0;
+  else if (++S.dry >= S.players.length) {
+    S.dry = 0;
+    const k = S.slot % S.targets.length;
+    S.slot++;
+    const old = S.targets[k];
+    S.targets[k] = '';
+    S.targets[k] = newTarget(S);
+    info.refresh = { slot: k, old, next: S.targets[k] };
   }
-  if (stone.length < MIN_LEN) {
-    info.refillFrom = stone.length;
-    stone += randDigits(MIN_LEN - stone.length);
+  info.after = S.stone;
+  drawCards(S, p);
+  const top = Math.max(...S.players.map(x => x.score));
+  if (top >= WIN) {
+    const n = S.players.length;
+    for (let k = 0; k < n; k++) { const q = (pi + k) % n; if (S.players[q].score === top) { S.winner = q; break; } }
+  } else {
+    S.turn = (pi + 1) % S.players.length;
+    if (S.turn === 0) S.round++;
   }
-  S.stone = stone;
-  info.after = stone;
-  drawTools(S, p);
-  drawComms(p);
-  S.log.unshift({ who: pi, op, rest: !mv, carved: cr.steps.map(s => s.comm.num), pts: cr.points });
-  if (S.log.length > 60) S.log.length = 60;
-  if (p.score >= WIN) S.winner = pi;
-  else { S.turn = (pi + 1) % S.players.length; if (S.turn === 0) S.round++; }
   return info;
-}
-
-function potential(stone, comms) {
-  let p = 0;
-  for (const c of comms) {
-    const L = c.num.length;
-    let best = 0;
-    for (let i = 0; i + L <= stone.length; i++) {
-      let m = 0;
-      for (let k = 0; k < L; k++) if (stone[i + k] === c.num[k]) m++;
-      if (m > best) best = m;
-    }
-    p += (best / L) * c.pts;
-  }
-  return p;
-}
-
-function botChoose(S, pi, noise = 1.2) {
-  const p = S.players[pi];
-  const st = S.stone;
-  let best = null, bestScore = -Infinity;
-  const consider = (mv, stone) => {
-    const cr = carveAll(stone, p.comms);
-    const used = new Set(cr.steps.map(s => s.ci));
-    const rem = p.comms.filter((c, i) => !used.has(i));
-    let sc = cr.points * 10 + potential(cr.stone, rem) * 1.5 + Math.random() * noise;
-    if (cr.stone.length > 10) sc -= 1.5;
-    if (!mv) sc -= 1;
-    if (sc > bestScore) { bestScore = sc; best = mv; }
-  };
-  consider(null, st);
-  const seen = new Set();
-  p.hand.forEach((t, h) => {
-    if (seen.has(t)) return;
-    seen.add(t);
-    const dirs = t === 'nu' ? [-1, 1] : [0];
-    for (let a = 0; a < st.length; a++)
-      for (let b = a; b < st.length; b++)
-        for (const dir of dirs) {
-          const r = tryMove(st, t, a, b, dir);
-          if (r.ok) consider({ h, a, b, dir }, r.ns);
-        }
-  });
-  return best;
 }
 // ===== LOGIC END =====
 
 const $ = id => document.getElementById(id);
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms, 250) : ms));
-const STORE_KEY = 'chisel-game-v1';
+const STORE_KEY = 'chisel-game-v2';
 const COLORS = ['#ffb547', '#6fb7ff', '#ff7a90', '#b79bff'];
-const TOOL_SHORT = { sq: '1–2 digits', rt: 'perfect squares', cu: '1 digit', cr: 'perfect cubes', fl: '2–4 digits', nu: '1 digit ±1' };
 
 let S = null;
-let sel = null;        // { a, b }
-let lifted = null;     // { h, dir }
+let lifted = null;          // index of the lifted card in your hand
 let busy = false, animWho = -1, epoch = 0;
-let drag = null;
-let shownScores = null;
-let coachBusy = '';
-let hintMsg = '';
+let shownScores = null, shownTargets = null;
+let coachBusy = '', hintMsg = '', hintTile = -1;
 let swapArmed = false, swapTimer = null;
 let muted = false, tutDone = false;
 
 const pref = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
 muted = pref('chisel-muted') === '1';
-tutDone = pref('chisel-tut') === '1';
+tutDone = pref('chisel-tut2') === '1';
 
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     const s = raw && JSON.parse(raw);
-    return s && s.v === 1 && Array.isArray(s.players) ? s : null;
+    return s && s.v === 2 && Array.isArray(s.players) && Array.isArray(s.targets) ? s : null;
   } catch (e) { return null; }
 }
 
@@ -892,7 +859,6 @@ function noise(dur, vol, freq) {
   s.start();
 }
 const sfx = {
-  tick: () => tone(1300, .035, 'square', .015),
   lift: () => tone(480, .09, 'triangle', .07, 0, 760),
   bad: () => tone(190, .14, 'square', .035, 0, 120),
   strike: () => { noise(.2, .55, 2400); tone(140, .2, 'triangle', .16, 0, 60); },
@@ -909,26 +875,7 @@ const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (
 const humanTurn = () => S.winner == null && S.players[S.turn].human && !busy;
 const inRange = (r, i) => r && i >= r[0] && i <= r[1];
 const me = () => S.players[0];
-
-function mineSet(stone) {
-  const set = new Set();
-  for (const c of me().comms) {
-    const i = stone.indexOf(c.num);
-    if (i >= 0) for (let k = 0; k < c.num.length; k++) set.add(i + k);
-  }
-  return set;
-}
-function canSet() {
-  const set = new Set();
-  if (!lifted) return set;
-  const t = me().hand[lifted.h];
-  const dirs = t === 'nu' ? [-1, 1] : [0];
-  const st = S.stone;
-  for (let a = 0; a < st.length; a++)
-    for (let b = a; b < st.length; b++)
-      for (const d of dirs) if (tryMove(st, t, a, b, d).ok) for (let k = a; k <= b; k++) set.add(k);
-  return set;
-}
+const cardScores = c => { for (let i = 0; i < S.stone.length; i++) { const r = tryPlay(S.stone, c, i); if (r.ok && carvesOn(S, r.ns) > 0) return true; } return false; };
 
 /* ---------- Rendering ---------- */
 function renderPlayers() {
@@ -939,9 +886,20 @@ function renderPlayers() {
     const active = S.winner == null && (busy ? animWho === i : S.turn === i);
     const d = document.createElement('div');
     d.className = 'pl' + (active ? ' active' : '');
-    d.id = 'pl' + i;
     d.style.setProperty('--c', COLORS[i]);
     d.innerHTML = `<div class="ring" id="ring${i}" style="--pct:${Math.min(1, score / WIN)}"><span class="sc">${score}</span></div><div class="pn">${p.name}</div><div class="bubble" id="bub${i}"></div>`;
+    el.append(d);
+  });
+}
+
+function renderTargets(anim = {}) {
+  const el = $('targets');
+  el.innerHTML = '';
+  (shownTargets || S.targets).forEach((t, k) => {
+    const d = document.createElement('div');
+    d.className = 'tgt' + (anim[k] ? ' ' + anim[k] : '');
+    d.id = 'tgt' + k;
+    d.textContent = t;
     el.append(d);
   });
 }
@@ -949,146 +907,88 @@ function renderPlayers() {
 function paintStone(stone, marks = {}) {
   const el = $('stone');
   el.innerHTML = '';
-  el.style.setProperty('--n', Math.max(stone.length, 7));
+  el.style.setProperty('--n', Math.max(stone.length, 6));
   if (marks.bc) el.style.setProperty('--bc', marks.bc);
+  const card = marks.preview && lifted != null ? me().hand[lifted] : null;
   [...stone].forEach((d, i) => {
-    const t = document.createElement('div');
+    const t = document.createElement('button');
+    t.type = 'button';
     t.className = 'tile';
     t.dataset.i = i;
     t.textContent = d;
-    t.tabIndex = 0;
-    t.setAttribute('role', 'button');
-    t.setAttribute('aria-label', `Digit ${d}`);
-    for (const k of ['sel', 'fresh', 'carve', 'crack', 'botsel']) if (inRange(marks[k], i)) t.classList.add(k);
-    if (marks.mine && marks.mine.has(i)) t.classList.add('mine');
-    if (marks.can && marks.can.has(i)) t.classList.add('can');
+    if (inRange(marks.fresh, i)) t.classList.add('fresh');
+    if (inRange(marks.carve, i)) t.classList.add('carve');
+    if (marks.crack === i) t.classList.add('crack');
+    if (marks.botsel === i) t.classList.add('botsel');
+    let label = `Digit ${d}`;
+    if (card) {
+      const r = tryPlay(stone, card, i);
+      if (r.ok) {
+        const scores = carvesOn(S, r.ns) > 0;
+        const pv = document.createElement('span');
+        pv.className = 'pv';
+        pv.textContent = r.res === '' ? '✕' : r.res;
+        t.append(pv);
+        t.classList.add('canplay');
+        if (scores) t.classList.add('gold');
+        label += `: becomes ${r.res === '' ? 'nothing' : r.res}${scores ? ', scores' : ''}`;
+      } else {
+        t.classList.add('dim');
+      }
+    }
+    t.setAttribute('aria-label', label);
+    t.addEventListener('click', () => onTile(i));
     el.append(t);
   });
-  const pe = $('pips');
-  pe.innerHTML = '';
-  for (let i = 0; i < MAX_LEN; i++) {
-    const s = document.createElement('i');
-    if (i < stone.length) s.className = stone.length >= MAX_LEN - 1 ? 'on hot' : 'on';
-    pe.append(s);
-  }
-}
-
-function previewEl(stone, marks) {
-  const w = document.createElement('div');
-  w.className = 'preview';
-  [...stone].forEach((d, i) => {
-    const t = document.createElement('span');
-    t.className = 'tile';
-    if (inRange(marks.fresh, i)) t.classList.add('fresh');
-    if (marks.carve && marks.carve.has(i)) t.classList.add('carve');
-    t.textContent = d;
-    w.append(t);
-  });
-  return w;
 }
 
 function renderCoach() {
   const el = $('coach');
   el.innerHTML = '';
-  const msg = html => { const p = document.createElement('p'); p.className = 'msg'; p.innerHTML = html; el.append(p); return p; };
+  const msg = html => { const p = document.createElement('p'); p.className = 'msg'; p.innerHTML = html; el.append(p); };
   if (busy) { msg(coachBusy || '&nbsp;'); return; }
   if (S.winner != null) {
     const w = S.players[S.winner];
-    msg(w.human ? 'You won this one!' : `${w.name} won this round.`);
+    msg(w.human ? 'You won!' : `${w.name} won this time.`);
     const b = document.createElement('button');
-    b.className = 'strike'; b.type = 'button'; b.textContent = 'PLAY AGAIN';
+    b.className = 'again'; b.type = 'button'; b.textContent = 'PLAY AGAIN';
     b.addEventListener('click', () => startNew(S.players.length - 1));
     el.append(b);
     return;
   }
   const cur = S.players[S.turn];
-  if (!cur.human) { msg(`<span style="color:${COLORS[S.turn]}">${cur.name}</span> is thinking…`); return; }
+  if (!cur.human) { msg(`<span style="color:${COLORS[S.turn]}">${cur.name}</span>'s turn…`); return; }
   if (hintMsg) { msg(hintMsg); return; }
-  const hand = me().hand;
-  const live = me().comms.filter(c => S.stone.includes(c.num));
-  if (lifted) {
-    const t = hand[lifted.h];
-    const name = TOOL_INFO[t].name;
-    if (!sel) {
-      const can = canSet();
-      msg(can.size
-        ? `<b>${name}</b> works on the <span class="glowtxt">glowing digits</span>. Swipe across the ones you want.`
-        : `<b>${name}</b> can't be used anywhere right now. Try another card.`);
-      return;
-    }
-    const mv = tryMove(S.stone, t, sel.a, sel.b, lifted.dir);
-    if (!mv.ok) { msg(`<span class="warn">${mv.why}.</span> Pick other digits or another card.`); return; }
-    const cr = carveAll(mv.ns, me().comms);
-    const carveIdx = new Set();
-    if (cr.steps.length) { const s0 = cr.steps[0]; for (let k = 0; k < s0.len; k++) carveIdx.add(s0.idx + k); }
-    el.append(previewEl(mv.ns, { fresh: [sel.a, sel.a + mv.res.length - 1], carve: carveIdx }));
-    const kept = live.filter(c => mv.ns.includes(c.num));
-    if (cr.steps.length) msg(`<span class="gold">Carves ${cr.steps.map(s => s.comm.num).join(' + ')} for +${cr.points}!</span>`);
-    else if (live.length && kept.length < live.length) msg(`<span class="warn">This breaks your ${live.map(c => c.num).join(' and ')}.</span>`);
-    else msg('No carve yet, but it changes the Stone.');
-    const b = document.createElement('button');
-    b.className = 'strike'; b.type = 'button'; b.textContent = 'STRIKE!';
-    b.addEventListener('click', play);
-    el.append(b);
+  if (lifted == null) {
+    const stars = me().hand.some(cardScores);
+    msg(stars
+      ? 'Your turn! Tap a card. <span class="gold">★ cards can score now.</span>'
+      : 'Your turn! Tap a card. No card can score this time, so play one anyway or get new cards.');
     return;
   }
-  if (sel) {
-    const run = S.stone.slice(sel.a, sel.b + 1);
-    const n = hand.filter(t => (t === 'nu' ? [-1, 1] : [0]).some(d => tryMove(S.stone, t, sel.a, sel.b, d).ok)).length;
-    msg(n
-      ? `Now tap a <b>glowing card</b> to use it on <span class="num">${run}</span>.`
-      : `No card fits <span class="num">${run}</span>. Pick other digits, or tap Hint.`);
-    return;
-  }
-  if (live.length) {
-    msg(`Your <span class="gold">${live[0].num}</span> is in the Stone! Make any move that keeps it whole and it's yours.`);
-  } else {
-    msg(`<b>Your turn!</b> Swipe across digits on the Stone, then play a card on them.`);
-  }
-}
-
-function renderTargets() {
-  const el = $('targets');
-  el.innerHTML = '';
-  for (const c of me().comms) {
-    const live = S.stone.includes(c.num) && !busy;
-    const d = document.createElement('div');
-    d.className = 'target' + (live ? ' live' : '');
-    d.innerHTML = `<span class="tl">${live ? 'IN THE STONE!' : 'TARGET'}</span><span class="tn">${c.num}</span><span class="tp">+${c.pts}</span>`;
-    el.append(d);
-  }
+  const c = me().hand[lifted];
+  if (cardScores(c)) msg('Now tap a digit. <span class="gold">Tap a gold one to score!</span>');
+  else msg('Now tap a digit to change it. The bubbles show what it becomes.');
 }
 
 function renderHand() {
   const el = $('hand');
   el.innerHTML = '';
   const my = humanTurn();
-  const hand = me().hand;
-  const rots = [-8, -3, 3, 8], dys = [12, 2, 2, 12];
-  hand.forEach((t, h) => {
+  me().hand.forEach((c, h) => {
+    const info = CARD_INFO[c];
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = `card t-${t}`;
+    b.className = `card t-${c}`;
     b.dataset.h = h;
-    b.style.setProperty('--rot', rots[h] + 'deg');
-    b.style.setProperty('--dy', dys[h] + 'px');
-    const isLift = lifted && lifted.h === h;
-    let badge = '', why = false;
-    if (my && sel) {
-      const dirs = t === 'nu' ? (isLift ? [lifted.dir] : [-1, 1]) : [0];
-      const rs = dirs.map(d => tryMove(S.stone, t, sel.a, sel.b, d));
-      const good = rs.filter(r => r.ok);
-      if (good.length) { b.classList.add('ok'); badge = '→ ' + good.map(r => r.res).join(' / '); }
-      else { b.classList.add('no'); badge = rs[0].why; why = true; }
-    }
-    if (isLift) { b.classList.remove('ok'); b.classList.add('lift'); }
+    if (lifted === h) b.classList.add('lift');
+    else if (lifted != null) b.classList.add('other');
     if (!my) b.classList.add('idle');
-    b.innerHTML = `<span class="band"><span class="sym">${TOOL_INFO[t].sym}</span></span>` +
-      `<span class="cname">${TOOL_INFO[t].name}</span><span class="crule">${TOOL_SHORT[t]}</span>` +
-      (isLift && t === 'nu' ? `<span class="nudge"><i data-d="-1" class="${lifted.dir < 0 ? 'on' : ''}">−1</i><i data-d="1" class="${lifted.dir > 0 ? 'on' : ''}">+1</i></span>` : '') +
-      `<span class="badge${why ? ' why' : ''}">${badge}</span>`;
-    b.setAttribute('aria-label', `${TOOL_INFO[t].name} card${badge ? ', ' + badge : ''}`);
-    b.addEventListener('click', e => onCard(h, e));
+    const star = my && cardScores(c);
+    b.innerHTML = `<span class="band"><span class="sym">${info.sym}</span></span><span class="cname">${info.name}</span><span class="cex">${info.ex}</span>` +
+      (star ? '<span class="star" aria-hidden="true">★</span>' : '');
+    b.setAttribute('aria-label', `${info.name} card, ${info.ex}${star ? ', can score now' : ''}`);
+    b.addEventListener('click', () => onCard(h));
     el.append(b);
   });
 }
@@ -1098,129 +998,78 @@ function renderButtons() {
   $('hintBtn').disabled = !my;
   $('swapBtn').disabled = !my;
   $('swapBtn').classList.toggle('armed', swapArmed && my);
-  $('swapLabel').textContent = swapArmed && my ? 'Sure?' : 'Swap';
+  $('swapLabel').textContent = swapArmed && my ? 'Sure?' : 'New cards';
   $('soundBtn').textContent = muted ? 'Sound: off' : 'Sound: on';
 }
 
 function placeFinger() {
   const f = $('finger');
-  const show = !tutDone && humanTurn() && !sel && !lifted && S.stone.length >= 3;
-  f.hidden = !show;
-  if (!show) return;
-  const tiles = $('stone').children;
-  const z = $('zone').getBoundingClientRect();
-  const r1 = tiles[1].getBoundingClientRect(), r3 = tiles[3].getBoundingClientRect();
-  f.style.left = (r1.left + r1.width / 2 - z.left) + 'px';
-  f.style.top = (r1.top + r1.height * .62 - z.top) + 'px';
-  f.style.setProperty('--dx', (r3.left - r1.left) + 'px');
+  let target = null;
+  if (!tutDone && humanTurn()) {
+    if (lifted == null) {
+      const h = me().hand.findIndex(cardScores);
+      if (h >= 0) target = $('hand').children[h];
+    } else {
+      target = $('stone').querySelector('.tile.gold');
+    }
+  }
+  if (hintTile >= 0 && humanTurn() && lifted != null) target = $('stone').children[hintTile] || target;
+  f.hidden = !target;
+  if (!target) return;
+  const r = target.getBoundingClientRect();
+  f.style.left = (r.left + r.width / 2) + 'px';
+  f.style.top = (r.top + r.height + 6) + 'px';
 }
 
 function render() {
   renderPlayers();
-  const marks = { mine: mineSet(S.stone) };
-  if (humanTurn()) {
-    if (sel) marks.sel = [sel.a, sel.b];
-    else if (lifted) marks.can = canSet();
-  }
-  paintStone(S.stone, marks);
-  renderCoach();
   renderTargets();
+  paintStone(S.stone, { preview: humanTurn() });
+  renderCoach();
   renderHand();
   renderButtons();
   placeFinger();
 }
 
-function updateSelVisual() {
-  for (const t of $('stone').children) t.classList.toggle('sel', !!sel && inRange([sel.a, sel.b], +t.dataset.i));
-}
-
 /* ---------- Input ---------- */
-const stoneEl = $('stone');
-stoneEl.addEventListener('pointerdown', e => {
-  const t = e.target.closest('.tile');
-  if (!t || !humanTurn()) return;
-  e.preventDefault();
-  const i = +t.dataset.i;
-  $('finger').hidden = true;
-  drag = { start: i, cur: i, moved: false, prev: sel };
-  sel = { a: i, b: i };
-  updateSelVisual();
-  try { stoneEl.setPointerCapture(e.pointerId); } catch (err) {}
-});
-stoneEl.addEventListener('pointermove', e => {
-  if (!drag) return;
-  const hit = document.elementFromPoint(e.clientX, e.clientY);
-  const t = hit && hit.closest ? hit.closest('.tile') : null;
-  if (!t || !stoneEl.contains(t)) return;
-  const i = +t.dataset.i;
-  if (i === drag.cur) return;
-  drag.cur = i;
-  drag.moved = true;
-  sel = { a: Math.min(drag.start, i), b: Math.max(drag.start, i) };
-  sfx.tick();
-  updateSelVisual();
-});
-stoneEl.addEventListener('pointerup', () => {
-  if (!drag) return;
-  const d = drag; drag = null;
-  hintMsg = '';
-  if (!d.moved) { tapTile(d.start, d.prev); return; }
-  render();
-});
-stoneEl.addEventListener('pointercancel', () => { if (drag) { sel = drag.prev; drag = null; render(); } });
-stoneEl.addEventListener('keydown', e => {
-  const t = e.target.closest('.tile');
-  if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); tapTile(+t.dataset.i, sel); }
-});
-
-function tapTile(i, prev) {
+function onCard(h) {
   if (!humanTurn()) return;
-  hintMsg = '';
-  if (prev && prev.a === prev.b && prev.a === i) sel = null;
-  else if (prev && prev.a === prev.b) sel = { a: Math.min(prev.a, i), b: Math.max(prev.a, i) };
-  else sel = { a: i, b: i };
-  sfx.tick();
-  render();
-}
-
-function onCard(h, e) {
-  if (!humanTurn()) return;
-  hintMsg = '';
-  const t = me().hand[h];
-  const dEl = e.target.closest('[data-d]');
-  if (dEl && lifted && lifted.h === h) { lifted.dir = +dEl.dataset.d; sfx.tick(); render(); return; }
-  if (lifted && lifted.h === h) {
-    const mv = sel && tryMove(S.stone, t, sel.a, sel.b, lifted.dir);
-    if (mv && mv.ok) { play(); return; }
-    lifted = null; sfx.bad(); render(); return;
-  }
-  let dir = 0;
-  if (t === 'nu') {
-    dir = 1;
-    if (sel && !tryMove(S.stone, t, sel.a, sel.b, 1).ok && tryMove(S.stone, t, sel.a, sel.b, -1).ok) dir = -1;
-  }
-  lifted = { h, dir };
+  hintMsg = ''; hintTile = -1;
+  lifted = lifted === h ? null : h;
   sfx.lift();
   render();
 }
 
-function play() {
-  if (!humanTurn() || !lifted || !sel) return;
-  const mv = { h: lifted.h, a: sel.a, b: sel.b, dir: lifted.dir };
-  if (!tryMove(S.stone, me().hand[mv.h], mv.a, mv.b, mv.dir).ok) return;
-  performTurn(0, mv);
+function onTile(i) {
+  if (!humanTurn()) return;
+  if (lifted == null) {
+    hintMsg = 'First tap one of your cards, then tap a digit.';
+    sfx.bad();
+    render();
+    for (const c of $('hand').children) c.classList.add('wiggle');
+    return;
+  }
+  const r = tryPlay(S.stone, me().hand[lifted], i);
+  if (!r.ok) {
+    hintMsg = `<span class="warn">${r.why}.</span> Tap another digit.`;
+    sfx.bad();
+    render();
+    return;
+  }
+  performTurn(0, { h: lifted, i });
 }
 
 $('hintBtn').addEventListener('click', () => {
   if (!humanTurn()) return;
-  const m = botChoose(S, 0, 0);
-  if (!m) {
-    sel = null; lifted = null;
-    hintMsg = 'Hint: none of your cards help much right now. <b>Swap</b> for new ones.';
-  } else {
-    sel = { a: m.a, b: m.b };
-    lifted = { h: m.h, dir: m.dir };
-    hintMsg = '';
+  const m = chooseMove(S, 0, 0);
+  hintMsg = '';
+  if (!m) { lifted = null; hintTile = -1; hintMsg = 'No moves left. Tap New cards.'; }
+  else {
+    lifted = m.h;
+    hintTile = m.i;
+    hintMsg = carvesOn(S, m.ns) > 0
+      ? 'Tap the digit with the white dot to score!'
+      : 'Nothing scores right now. Tap the digit with the white dot. It is the safest move.';
   }
   sfx.lift();
   render();
@@ -1237,13 +1086,12 @@ $('swapBtn').addEventListener('click', () => {
   }
   swapArmed = false;
   clearTimeout(swapTimer);
-  sel = null; lifted = null;
   performTurn(0, null);
 });
 
 /* ---------- Effects ---------- */
-function rectOf(el) { return el.getBoundingClientRect(); }
-function centerRect(r, w, h) { return { left: r.left + r.width / 2 - w / 2, top: r.top + r.height / 2 - h / 2, width: w, height: h }; }
+const rectOf = el => el.getBoundingClientRect();
+const centerRect = (r, w, h) => ({ left: r.left + r.width / 2 - w / 2, top: r.top + r.height / 2 - h / 2, width: w, height: h });
 
 function fly(el, from, to, dur, { scale = .4, rot = 0, fade = true } = {}) {
   el.style.left = from.left + 'px';
@@ -1260,19 +1108,16 @@ function fly(el, from, to, dur, { scale = .4, rot = 0, fade = true } = {}) {
   ], { duration: dur, easing: 'cubic-bezier(.55,0,.25,1)', fill: 'forwards' });
   return a.finished.then(() => el.remove(), () => el.remove());
 }
-
-function flyCard(tool, from, to) {
-  const c = document.createElement('div');
-  c.className = `card t-${tool}`;
-  c.innerHTML = `<span class="band"><span class="sym">${TOOL_INFO[tool].sym}</span></span><span class="cname">${TOOL_INFO[tool].name}</span>`;
-  return fly(c, from, to, 420, { scale: .5, rot: 10, fade: true });
+function flyCard(c, from, to) {
+  const el = document.createElement('div');
+  el.className = `card t-${c}`;
+  el.innerHTML = `<span class="band"><span class="sym">${CARD_INFO[c].sym}</span></span><span class="cname">${CARD_INFO[c].name}</span>`;
+  return fly(el, from, to, 420, { scale: .45, rot: 10, fade: true });
 }
-
-function floatText(text, rect, color) {
+function floatText(text, rect) {
   const f = document.createElement('div');
   f.className = 'float';
   f.textContent = text;
-  if (color) f.style.color = color;
   f.style.left = rect.left + rect.width / 2 + 'px';
   f.style.top = rect.top + rect.height / 2 + 'px';
   $('fx').append(f);
@@ -1283,7 +1128,6 @@ function floatText(text, rect, color) {
     { transform: 'translate(-50%,-190%) scale(1)', opacity: 0 },
   ], { duration: 1100, easing: 'ease-out', fill: 'forwards' }).finished.then(() => f.remove(), () => f.remove());
 }
-
 function shake() {
   if (reduced || !$('zone').animate) return;
   $('zone').animate([
@@ -1291,7 +1135,6 @@ function shake() {
     { transform: 'translate(-2px,1px)' }, { transform: 'translate(0,0)' },
   ], { duration: 220 });
 }
-
 function bubble(pi, text) {
   const b = $('bub' + pi);
   if (!b) return;
@@ -1300,7 +1143,6 @@ function bubble(pi, text) {
   clearTimeout(b._t);
   b._t = setTimeout(() => b.classList.remove('show'), 1900);
 }
-
 function banner(text) {
   const b = $('banner');
   b.textContent = text;
@@ -1313,91 +1155,103 @@ function banner(text) {
 async function performTurn(pi, mv) {
   if (busy) return;
   const e = epoch;
+  const ok = () => e === epoch;
   const p = S.players[pi];
-  const tool = mv ? p.hand[mv.h] : null;
-  const cardEl = p.human && mv ? $('hand').querySelector(`[data-h="${mv.h}"]`) : null;
+  const card = mv ? p.hand[mv.h] : null;
+  const cardEl = p.human && mv ? $('hand').children[mv.h] : null;
   const cardRect = cardEl ? rectOf(cardEl) : null;
   shownScores = S.players.map(x => x.score);
+  shownTargets = S.targets.slice();
   busy = true; animWho = pi;
-  sel = null; lifted = null; hintMsg = '';
+  lifted = null; hintMsg = ''; hintTile = -1;
   $('finger').hidden = true;
 
   const info = applyTurn(S, pi, mv);
   save();
-  if (p.human && mv && !tutDone) { tutDone = true; pref('chisel-tut', '1'); }
+  if (p.human && mv && !tutDone) { tutDone = true; pref('chisel-tut2', '1'); }
 
-  coachBusy = p.human ? '' : `<span style="color:${COLORS[pi]}">${p.name}</span> is playing…`;
-  renderPlayers(); renderCoach(); renderTargets(); renderButtons();
+  const who = p.human ? 'You' : p.name;
+  coachBusy = p.human ? '&nbsp;' : `<span style="color:${COLORS[pi]}">${p.name}</span>'s turn…`;
+  renderPlayers(); renderCoach(); renderButtons();
+  paintStone(info.before, {});
   for (const c of $('hand').children) c.classList.add('idle');
-  const ok = () => e === epoch;
 
-  if (info.strike) {
-    const zoneR = rectOf($('stone'));
-    const target = centerRect(zoneR, 60, 84);
+  if (mv) {
+    const tileR = rectOf($('stone').children[mv.i]);
+    const to = centerRect(tileR, 60, 84);
     if (p.human) {
       if (cardEl) cardEl.style.visibility = 'hidden';
-      await flyCard(tool, cardRect, target);
+      await flyCard(card, cardRect, to);
     } else {
-      bubble(pi, fmtOp(tool, info.strike.run, mv.dir));
-      await sleep(500); if (!ok()) return;
-      await flyCard(tool, centerRect(rectOf($('ring' + pi)), 60, 84), target);
+      bubble(pi, `${CARD_INFO[card].sym} on ${info.digit}`);
+      await sleep(450); if (!ok()) return;
+      paintStone(info.before, { botsel: mv.i, bc: COLORS[pi] });
+      await flyCard(card, centerRect(rectOf($('ring' + pi)), 60, 84), to);
       if (!ok()) return;
-      paintStone(info.before, { botsel: [mv.a, mv.b], bc: COLORS[pi] });
-      await sleep(650);
+      await sleep(250);
     }
     if (!ok()) return;
-    paintStone(info.before, { crack: [mv.a, mv.b] });
+    paintStone(info.before, { crack: mv.i });
     sfx.strike(); buzz(15); shake();
     await sleep(320); if (!ok()) return;
-    paintStone(info.strike.ns, { fresh: [mv.a, mv.a + info.strike.res.length - 1] });
-    sfx.drop();
-    coachBusy = `<span class="num">${fmtOp(tool, info.strike.run, mv.dir)} → ${info.strike.res}</span>`;
+    paintStone(info.mid, { fresh: info.res ? [mv.i, mv.i + info.res.length - 1] : null });
+    if (info.res) sfx.drop();
+    coachBusy = `${who} changed <span class="num">${info.digit}</span> into <span class="num">${info.res || 'nothing'}</span>`;
     renderCoach();
-    await sleep(600); if (!ok()) return;
+    await sleep(650); if (!ok()) return;
   } else {
-    bubble(pi, 'Swap!');
+    bubble(pi, 'New cards!');
     sfx.swap();
-    coachBusy = `${p.human ? 'You swap' : p.name + ' swaps'} all ${HAND} cards.`;
+    coachBusy = `${who} swapped for new cards.`;
     renderCoach();
-    await sleep(800); if (!ok()) return;
+    await sleep(900); if (!ok()) return;
   }
 
-  const steps = info.carve.steps;
-  for (let k = 0; k < steps.length; k++) {
-    const st = steps[k];
-    paintStone(st.before, { carve: [st.idx, st.idx + st.len - 1] });
-    sfx.carve(k);
-    coachBusy = `<span class="gold">${p.human ? 'You carve' : p.name + ' carves'} ${st.comm.num}!</span>`;
+  let k = 0;
+  for (const ev of info.events) {
+    if (ev.type === 'carve') {
+      renderTargets({ [ev.slot]: 'hit' });
+      paintStone(ev.before, { carve: [ev.idx, ev.idx + 1] });
+      sfx.carve(k);
+      coachBusy = `<span class="gold">${who} made ${ev.num}! +1 point</span>`;
+      renderCoach();
+      if (!p.human) bubble(pi, `Made ${ev.num}!`);
+      await sleep(450); if (!ok()) return;
+      const ring = rectOf($('ring' + pi));
+      for (const t of $('stone').querySelectorAll('.tile.carve')) {
+        const clone = t.cloneNode(true);
+        clone.classList.remove('carve');
+        clone.style.background = 'linear-gradient(180deg,#fff6c9,#ffd34d)';
+        t.style.visibility = 'hidden';
+        fly(clone, rectOf(t), centerRect(ring, 20, 26), 560, { scale: .5 });
+      }
+      await sleep(560); if (!ok()) return;
+      shownScores[pi]++;
+      renderPlayers();
+      floatText('+1', rectOf($('ring' + pi)));
+      buzz(25);
+      paintStone(ev.before.slice(0, ev.idx) + ev.before.slice(ev.idx + 2), {});
+      shownTargets[ev.slot] = ev.next;
+      renderTargets({ [ev.slot]: 'new' });
+      await sleep(600); if (!ok()) return;
+      k++;
+    } else if (ev.type === 'refill') {
+      paintStone(ev.after, { fresh: [ev.from, ev.after.length - 1] });
+      sfx.drop();
+      await sleep(450); if (!ok()) return;
+    }
+  }
+
+  if (info.refresh) {
+    shownTargets[info.refresh.slot] = info.refresh.next;
+    renderTargets({ [info.refresh.slot]: 'new' });
+    coachBusy = `Nobody made ${info.refresh.old}, so it changed to ${info.refresh.next}.`;
     renderCoach();
-    if (!p.human) bubble(pi, `Carved ${st.comm.num}!`);
-    await sleep(380); if (!ok()) return;
-    const ring = rectOf($('ring' + pi));
-    const tiles = [...$('stone').querySelectorAll('.tile.carve')];
-    tiles.forEach(t => {
-      const clone = t.cloneNode(true);
-      clone.classList.remove('carve');
-      clone.style.background = 'linear-gradient(180deg,#fff6c9,#ffd34d)';
-      t.style.visibility = 'hidden';
-      fly(clone, rectOf(t), centerRect(ring, 20, 26), 560, { scale: .5, fade: true });
-    });
-    await sleep(560); if (!ok()) return;
-    shownScores[pi] += st.comm.pts + (k > 0 ? 1 : 0);
-    renderPlayers();
-    floatText(`+${st.comm.pts}`, rectOf($('ring' + pi)));
-    if (k > 0) floatText('COMBO +1', rectOf($('stone')), '#7ff0e0');
-    buzz(25);
-    const rest = st.before.slice(0, st.idx) + st.before.slice(st.idx + st.len);
-    paintStone(rest, {});
-    await sleep(380); if (!ok()) return;
+    sfx.swap();
+    await sleep(1300); if (!ok()) return;
   }
 
-  if (info.refillFrom != null) {
-    paintStone(info.after, { fresh: [info.refillFrom, info.after.length - 1] });
-    sfx.drop();
-    await sleep(500); if (!ok()) return;
-  }
-
-  busy = false; animWho = -1; shownScores = null; coachBusy = '';
+  busy = false; animWho = -1; shownScores = null; shownTargets = null; coachBusy = '';
   render();
   if (S.winner != null) { showWin(); return; }
   if (S.players[S.turn].human) { banner('YOUR TURN'); sfx.turn(); }
@@ -1409,8 +1263,8 @@ function maybeBot() {
   const e = epoch;
   setTimeout(() => {
     if (e !== epoch || busy || S.winner != null || S.players[S.turn].human) return;
-    performTurn(S.turn, botChoose(S, S.turn));
-  }, reduced ? 300 : 700);
+    performTurn(S.turn, chooseMove(S, S.turn));
+  }, reduced ? 300 : 600);
 }
 
 /* ---------- Win screen ---------- */
@@ -1440,10 +1294,10 @@ function confetti() {
   cancelAnimationFrame(confettiRaf);
   const step = now => {
     ctx.clearRect(0, 0, c.width, c.height);
-    for (const p of parts) {
-      p.x += p.vx; p.y += p.vy; p.r += p.vr; p.vy += .03 * dpr;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
-      ctx.fillStyle = p.col; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+    for (const q of parts) {
+      q.x += q.vx; q.y += q.vy; q.r += q.vr; q.vy += .03 * dpr;
+      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.r);
+      ctx.fillStyle = q.col; ctx.fillRect(-q.s / 2, -q.s / 4, q.s, q.s / 2);
       ctx.restore();
     }
     if (now - t0 < 4000) confettiRaf = requestAnimationFrame(step);
@@ -1455,8 +1309,9 @@ function confetti() {
 /* ---------- Menus ---------- */
 function startNew(nBots) {
   epoch++;
-  busy = false; animWho = -1; sel = null; lifted = null; hintMsg = ''; coachBusy = ''; shownScores = null;
-  S = newGame(nBots);
+  busy = false; animWho = -1; lifted = null; hintMsg = ''; hintTile = -1; coachBusy = '';
+  shownScores = null; shownTargets = null;
+  S = newGame(nBots, !tutDone);
   save();
   $('menu').hidden = true;
   $('win').hidden = true;
@@ -1474,10 +1329,10 @@ $('howto').addEventListener('click', e => { if (e.target.id === 'howto') $('howt
 $('soundBtn').addEventListener('click', () => { muted = !muted; pref('chisel-muted', muted ? '1' : '0'); renderButtons(); if (!muted) sfx.lift(); });
 $('againBtn').addEventListener('click', () => startNew(S.players.length - 1));
 $('winMenuBtn').addEventListener('click', () => { $('win').hidden = true; $('menu').hidden = false; });
-window.addEventListener('resize', () => { if (S) placeFinger(); });
+window.addEventListener('resize', () => { if (S && !busy) placeFinger(); });
 
 function boot(data) {
-  S = (data && data.S && data.S.v === 1 && data.S) || load() || newGame(2);
+  S = (data && data.S && data.S.v === 2 && data.S) || load() || newGame(2, !tutDone);
   render();
   if (S.winner != null) showWin();
   else maybeBot();
